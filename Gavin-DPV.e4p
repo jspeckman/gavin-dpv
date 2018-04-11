@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Project SYSTEM "Project-5.1.dtd">
+<!-- eric project file for project Gavin-DPV -->
+<!-- Saved: 2018-04-11, 17:10:21 -->
+<!-- Copyright (C) 2018 Jason Speckman, jspeckman@gmail.com -->
+<Project version="5.1">
+  <Language>en_US</Language>
+  <Hash>42b177095964376caa48a081a609f299ecea43dc</Hash>
+  <ProgLanguage mixed="0">Python3</ProgLanguage>
+  <ProjectType>Console</ProjectType>
+  <Description>Hardware / software combination to log and report battery, environment, and telemetry data from a Gavin style DPV.</Description>
+  <Version>1.0.0</Version>
+  <Author>Jason Speckman</Author>
+  <Email>jspeckman@gmail.com</Email>
+  <Eol index="1"/>
+  <Sources>
+    <Source>src/gavin_bms.py</Source>
+    <Source>src/gavin_cli.py</Source>
+    <Source>src/gavin_environment.py</Source>
+    <Source>src/gavin_gpio.py</Source>
+    <Source>src/gavin_gui.py</Source>
+    <Source>src/gavin_imu.py</Source>
+    <Source>src/gavin_logger.py</Source>
+  </Sources>
+  <Forms/>
+  <Translations/>
+  <Resources/>
+  <Interfaces/>
+  <Others>
+    <Other></Other>
+    <Other>.gitignore</Other>
+    <Other>README.md</Other>
+  </Others>
+  <Vcs>
+    <VcsType>Git</VcsType>
+    <VcsOptions>
+      <dict>
+        <key>
+          <string>add</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>checkout</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>commit</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>diff</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>export</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>global</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>history</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>log</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>remove</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>status</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>tag</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+        <key>
+          <string>update</string>
+        </key>
+        <value>
+          <list>
+            <string></string>
+          </list>
+        </value>
+      </dict>
+    </VcsOptions>
+  </Vcs>
+  <FiletypeAssociations>
+    <FiletypeAssociation pattern="*.e4p" type="OTHERS"/>
+    <FiletypeAssociation pattern="*.idl" type="INTERFACES"/>
+    <FiletypeAssociation pattern="*.md" type="OTHERS"/>
+    <FiletypeAssociation pattern="*.py" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.py3" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.pyw" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.pyw3" type="SOURCES"/>
+    <FiletypeAssociation pattern="*.rst" type="OTHERS"/>
+    <FiletypeAssociation pattern="*.txt" type="OTHERS"/>
+    <FiletypeAssociation pattern="README" type="OTHERS"/>
+    <FiletypeAssociation pattern="README.*" type="OTHERS"/>
+  </FiletypeAssociations>
+</Project>

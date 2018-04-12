@@ -88,7 +88,7 @@ while True:
                 else: 
                     temp = float("{0:.1f}".format(sensor.read_temperature()))
                 # Pressure must be read AFTER temperature
-                mBar = float("{0:.3f}".format(sensor.read_pressure() / 100))
+                internal_mBar = float("{0:.3f}".format(sensor.read_pressure() / 100))
                 humidity = float("{0:.1f}".format(sensor.read_humidity()))
             else:
                 if config_map['units'] == 'Imperial':
@@ -96,10 +96,10 @@ while True:
                 else: 
                     temp = float("{0:.1f}".format(33.82345))
                 # Pressure must be read AFTER temperature
-                mBar = float("{0:.3f}".format(78784 / 100))
+                internal_mBar = float("{0:.3f}".format(78784 / 100))
                 humidity = -1
 #elevation = (1 - (mBar / 1013.25) ** .190284) * 145366.45
-            msg = json.dumps({'temp': temp, 'pressure': mBar, 'humidity': humidity}, indent = 4, sort_keys = True, separators=(',', ': '))
+            msg = json.dumps({'temp': temp, 'internal_pressure': internal_mBar, 'humidity': humidity}, indent = 4, sort_keys = True, separators=(',', ': '))
 
         elif request['request'] == 'reload':
             read_config()

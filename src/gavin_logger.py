@@ -137,6 +137,10 @@ def read_from_sensor_daemon(sensor_socket):
                     sensor_data_map['heading'] = data['heading']
                     sensor_data_map['roll'] = data['roll']
                     sensor_data_map['pitch'] = data['pitch']
+                    sensor_data_map['qx'] = data['qx']
+                    sensor_data_map['qy'] = data['qy']
+                    sensor_data_map['qz'] = data['qz']
+                    sensor_data_map['qw'] = data['qw']
         except socket.error:
             print("unable to request from",  id)
         
@@ -171,12 +175,12 @@ def flight_logging_thread():
                     header = 1
                 with open(config_map['log_dir'] + "/" + logfile,  'a') as flightlog:
                     if header == 1:
-                        flightlog.write('Timestamp,Heading,Roll,Pitch,Temperature,Pressure,Humidity,Voltage,Current,ERT,UUID')
+                        flightlog.write('Timestamp,Heading,Roll,Pitch,QX,QY,QZ,QW,Temperature,Pressure,Humidity,Voltage,Current,ERT,UUID')
                         header = 0
                     flightlog.write('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['heading']) + "," + str(sensor_data_map['roll']) + "," + str(sensor_data_map['pitch']) + "," + str(sensor_data_map['temp']) +"," + str(sensor_data_map['pressure']) + "," + str(sensor_data_map['humidity']) + "," + str(sensor_data_map['voltage']) + "," + str(sensor_data_map['current']) + "," + str(sensor_data_map['ert']) + "," + str(sensor_data_map['uuid']) + "\n")
                 if DEV_MODE == 1:
                     print("Logfile Name:",  logfile)
-                    print("Flight Log data: " + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['heading']) + "," + str(sensor_data_map['roll']) + "," + str(sensor_data_map['pitch']) + "," + str(sensor_data_map['temp']) + "," + str(sensor_data_map['pressure']) + "," + str(sensor_data_map['humidity']) + "," + str(sensor_data_map['voltage']) + "," + str(sensor_data_map['current']) + "," + str(sensor_data_map['ert']) + "," + str(sensor_data_map['uuid']))
+                    print("Flight Log data: " + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['heading']) + "," + str(sensor_data_map['roll']) + "," + str(sensor_data_map['pitch']) + "," + str(sensor_data_map['qx']) + "," + str(sensor_data_map['qy']) + "," + str(sensor_data_map['qz']) + "," + str(sensor_data_map['qw'])  + "," + str(sensor_data_map['temp']) + "," + str(sensor_data_map['pressure']) + "," + str(sensor_data_map['humidity']) + "," + str(sensor_data_map['voltage']) + "," + str(sensor_data_map['current']) + "," + str(sensor_data_map['ert']) + "," + str(sensor_data_map['uuid']))
         #time.sleep(config_map['sample_rate'])
         if config_map['shutdown_threads'] is True:
             break

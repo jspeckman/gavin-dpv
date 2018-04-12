@@ -199,9 +199,9 @@ while True:
         if request['request'] == 'data':
             if DEV_MODE != 1:
                 read_IMU_position()
-                msg = json.dumps({'heading': imu_data_map['heading'], 'roll': imu_data_map['roll'], 'pitch': imu_data_map['pitch']}, indent = 4, sort_keys = True, separators=(',', ': '))
+                msg = json.dumps({'heading': imu_data_map['heading'], 'roll': imu_data_map['roll'], 'pitch': imu_data_map['pitch'],  'qx': imu_data_map['x'],  'qy': imu_data_map['y'],  'qz': imu_data_map['z'],  'qw': imu_data_map['w']}, indent = 4, sort_keys = True, separators=(',', ': '))
             else:
-                msg = json.dumps({'heading': '0.00',  'roll': '0.00',  'pitch': '0.00'}, indent = 4, sort_keys = True, separators=(',', ': '))
+                msg = json.dumps({'heading': '0.00',  'roll': '0.00',  'pitch': '0.00',  'qx': '0.00',  'qy': '0.00',  'qz': '0.00',  'qw': '0.00'}, indent = 4, sort_keys = True, separators=(',', ': '))
         elif request['request'] == 'calibration status':
             calibrate_IMU('get')
             msg = json.dumps({'system': imu_data_map['sys'],  'gyro': imu_data_map['gyro'], 'accelerometer': imu_data_map['accel'], 'magnetometer': imu_data_map['mag'], 'system status': imu_data_map['sysStatus'] }, indent = 4, sort_keys = True, separators=(',', ': '))
@@ -216,6 +216,9 @@ while True:
             calibrate_IMU('load')
             axis_remap_IMU()
             msg = json.dumps({'reload': 'complete'}, indent = 4, sort_keys = True, separators=(',', ': '))
+        elif request['request'] == 'reset':
+            init_IMU()
+            msg = json.dumps({'reset': 'initiated'},  indent = 4,  sort_keys = True,  separators = (',',  ': '))
         elif request['request'] == 'shutdown':
             msg = json.dumps({'shutdown': 'complete'}, indent = 4, sort_keys = True, separators=(',', ': '))
             break

@@ -23,6 +23,9 @@ config_map = {}
 
 # setup sensor data map
 sensor_data_map = {}
+sensor_data_map['environment'] = {}
+sensor_data_map['bms'] = {}
+sensor_data_map['imu'] = {}
 sensor_data_map['environment']['temp'] = ""
 sensor_data_map['environment']['internal_pressure'] = ""
 sensor_data_map['environment']['humidity'] = ""

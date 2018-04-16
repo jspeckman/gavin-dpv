@@ -90,7 +90,6 @@ def read_battery_config():
             try:
                 battery_specs = json.load(battery_config)
                 battery_specs = max(battery_specs.items(), key=lambda i: i[1]['installed'])
-                #battery_specs = json.loads(json.dumps(battery_specs))
                 battery_map['uuid'] = battery_specs[1]['uuid']
                 if "battery-" + battery_map['uuid'] in battery_specs:
                     if 'installed' in battery_specs[1]:
@@ -106,13 +105,13 @@ def read_battery_config():
                     if 'chemistry' in battery_specs[1]:
                         battery_map['chemistry'] = battery_specs[1]['chemistry']
                     if 'voltage' in battery_specs[1]:
-                        battery_map['voltage'] = int(battery_specs[1]['voltage'])
-                    if 'AmpHr' in battery_specs[1]:
-                        battery_map['amphr'] = int(battery_specs[1]['AmpHr'])
+                        battery_map['voltage'] = float(battery_specs[1]['voltage'])
+                    if 'ampHr' in battery_specs[1]:
+                        battery_map['amphr'] = int(battery_specs[1]['ampHr'])
                     if 'min_voltage' in battery_specs[1]:
-                        battery_map['min_voltage'] = int(battery_specs[1]['min_voltage'])
+                        battery_map['min_voltage'] = float(battery_specs[1]['min_voltage'])
                     if 'max_voltage' in battery_specs[1]:
-                        battery_map['max_voltage'] = int(battery_specs[1]['max_voltage'])
+                        battery_map['max_voltage'] = float(battery_specs[1]['max_voltage'])
                 
             except ValueError:
                 print("Corrupt battery config file, loading defaults.")
@@ -168,6 +167,7 @@ while True:
             else:
                 voltage_value[0] = 12.33
                 voltage_value[1] = 12.29
+                adc_current_value = 13989   #Debugging
                 current_actual = 16
 
             vbatt_actual = float("{0:.2f}".format(sum(voltage_value)))

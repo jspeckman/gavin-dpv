@@ -105,7 +105,7 @@ def init_IMU():
         if not imu.begin():
             raise RuntimeError('Failed to initialize BNO055!')
         imu.set_axis_remap(**IMU_AXIS_MAP)
-        if config_map['FORCE_CALIBRATION'] != 1 and config_map['imu_calibration'] and config_map['imu_calibrate'] != 'Not Ready' and config_map['imu_calibration'] != 'DEV_MODE':
+        if config_map['FORCE_CALIBRATION'] != 1 and config_map['imu_calibration'] and config_map['imu_calibration'] != 'Not Ready' and config_map['imu_calibration'] != 'DEV_MODE':
             imu.set_calibration(config_map['imu_calibration'])
             
 def read_IMU_status():

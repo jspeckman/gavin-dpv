@@ -1,0 +1,16 @@
+[Unit]
+Description=Gavin GPIO Daemon
+After=network-online.target syslog.target gavin_logger.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/gavin/bin
+ExecStart=/opt/gavin/bin/gavin_gpio.py
+StandardOutput=syslog
+StandardError=syslog
+#User=myuser
+#Group=mygroup
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,86 @@
+DPV Telemetry package Notes
+
+Hardware:
+1) CPU - raspberry pi zero w    -Done
+2) rtc - pcf8523 + battery -Done
+3) imu - bno0555   -Done
+4) Pressure/Temp - bme280   -Done
+5) adc - ads1115 -Done
+6) voltage detection -Done
+7) current detection - acs770 (150 amp) -Done
+8) ubec power supply - dzs elec mini 6-24v -> 5v 3A usb -Done
+    
+Software:
+1) raspi-config
+    a) enable ssh
+    b) enable i2c
+    c) disable serial terminal
+
+2) apt-get install python-pip python-dev python-smbus git
+3) git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
+4) cd Adafruit_Python_GPIO
+5) sudo python setup.py install
+6) git clone https://github.com/adafruit/Adafruit_Python_BME280.git
+7) cd Adafruit_Python_BME280
+9) sudo python setup.py install
+10) git clone https://github.com/adafruit/Adafruit_Python_BNO055.git
+11) cd Adafruit_Python_BNO055
+12) sudo python setup.py install
+
+
+TODO:
+1) config file
+    a) first_run
+    b) uuid
+    c) dpv name
+    d) calibration
+        a) calibrate mode if missing
+    e) sample rate
+    f) axis remap
+    g) battery
+        a) chemistry
+        b) voltage
+        c) ah
+    h) units
+    i) activate method
+    j) activate trigger
+    
+2) battery log
+    a) uuid
+    b) date-time
+    d) start voltage
+    e) start load
+    f) end voltage
+    g) end load
+
+3) log file
+    a) flight number
+    b) timestamp
+    c) position
+        a) x
+        b) y
+        c) z
+    d) evironmental
+        a) pressure
+        b) temp
+        c) humidity
+    g) battery
+        a) voltage
+        b) load
+        
+2) interface webpage
+    a) calibration status                   -Done
+    b) sensor output                        -Done
+    f) download data
+    g) settings page                        -Done
+        a) rerun first run wizard
+        b) rerun calibration
+        c) rerun axis mapping
+        d) sync clock to browser            -Done
+        e) set units                        -Done
+        f) set sample rate                  -Done
+        g) set logging activation method    -Done
+        h) set logging deactivation trigger -Done
+    l) webgl dpv model
+    
+3) auto-mount thumbdrive

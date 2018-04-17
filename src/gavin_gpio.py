@@ -143,8 +143,8 @@ def display_battery_screen():
                 sensorsocket.close()
                 return
             if len(data) > 0:
-                    percent = data['percent']
-                    ert = data['ert'] / 60
+                    percent = data['bms']['percent']
+                    ert = data['bms']['ert'] / 60
         except socket.error:
             print("unable to request from",  id)
         

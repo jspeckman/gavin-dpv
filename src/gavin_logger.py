@@ -223,7 +223,7 @@ def battery_logging_thread():
                     if header == 1:
                         batterylog.write('Timestamp,Voltage,V1,V2,Watts,Current,Percent,ERT,Battery UUID')
                         header = 0
-                    batterylog.write('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['bms']['Voltage']) + "," + str(sensor_data_map['bms']['v1']) + "," + str(sensor_data_map['bms']['v2']) + "," + str(sensor_data_map['bms']['watts']) + "," + str(sensor_data_map['bms']['current']) + "," + str(sensor_data_map['bms']['percent']) + "," + str(sensor_data_map['bms']['ert'])  + "," + str(sensor_data_map['bms']['uuid']) + "\n")
+                    batterylog.write('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['bms']['voltage']) + "," + str(sensor_data_map['bms']['v1']) + "," + str(sensor_data_map['bms']['v2']) + "," + str(sensor_data_map['bms']['watts']) + "," + str(sensor_data_map['bms']['current']) + "," + str(sensor_data_map['bms']['percent']) + "," + str(sensor_data_map['bms']['ert'])  + "," + str(sensor_data_map['bms']['uuid']) + "\n")
                 if DEV_MODE == 1:
                     print("Logfile Name:",  logfile)
                     print("Battery Log data: " + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['bms']['Voltage']) + "," + str(sensor_data_map['bms']['v1']) + "," + str(sensor_data_map['bms']['v2']) + "," + str(sensor_data_map['bms']['watts']) + "," + str(sensor_data_map['bms']['current']) + "," + str(sensor_data_map['bms']['percent']) + "," + str(sensor_data_map['bms']['ert'])  + "," + str(sensor_data_map['bms']['uuid']) + "\n")
@@ -265,9 +265,9 @@ while True:
        
     if 'request' in request:
         if request['request'] == 'data':
-            read_from_sensor_daemon(config_map['env_socket'])
-            read_from_sensor_daemon(config_map['bms_socket'])
-            read_from_sensor_daemon(config_map['imu_socket'])
+            #read_from_sensor_daemon(config_map['env_socket'])
+            #read_from_sensor_daemon(config_map['bms_socket'])
+            #read_from_sensor_daemon(config_map['imu_socket'])
             msg = json.dumps(sensor_data_map, indent = 4, sort_keys = True, separators=(',', ': '))
                 
         elif request['request'] == 'reload':
@@ -285,6 +285,8 @@ while True:
                 config_map['flight_log'] = 'active'
                 if not flight_log_thread.is_alive():
                     flight_log_thread.start()
+                if not battery_log_thread.is_alive():
+                    battery_log_thread.start()
                 msg = json.dumps({'logging': 'started'}, indent = 4, sort_keys = True, separators=(',', ': '))
             else:
                 msg = json.dumps({'logging': 'running'}, indent = 4, sort_keys = True, separators=(',', ': '))

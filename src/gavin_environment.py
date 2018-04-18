@@ -9,7 +9,7 @@ import json
 import socket
 
 id = 'Gavin Environmental Daemon'
-version = '1.0.2'
+version = '1.0.3'
 
 try:
     from Adafruit_BME280 import *
@@ -20,7 +20,7 @@ except ImportError:
     
 if DEV_MODE != 1:
     # Configure BMP/BME280 parameters
-    sensor = BME280(address=0x76, t_mode=BME280_OSAMPLE_8, p_mode=BME280_OSAMPLE_8, h_mode=BME280_OSAMPLE_8)
+    internal_sensor = BME280(address=0x76, t_mode=BME280_OSAMPLE_8, p_mode=BME280_OSAMPLE_8, h_mode=BME280_OSAMPLE_8)
     
 # setup config map
 config_map = {}
@@ -84,22 +84,22 @@ while True:
         if request['request'] == 'data':
             if DEV_MODE != 1:
                 if config_map['units'] == 'Imperial':
-                    temp = float("{0:.1f}".format(sensor.read_temperature() * 1.8 + 32))
+                    internal_temp = float("{0:.1f}".format(internal_sensor.read_temperature() * 1.8 + 32))
                 else: 
-                    temp = float("{0:.1f}".format(sensor.read_temperature()))
+                    internal_temp = float("{0:.1f}".format(internal_sensor.read_temperature()))
                 # Pressure must be read AFTER temperature
-                internal_mBar = float("{0:.3f}".format(sensor.read_pressure() / 100))
-                humidity = float("{0:.1f}".format(sensor.read_humidity()))
+                internal_mBar = float("{0:.3f}".format(internal_sensor.read_pressure() / 100))
+                humidity = float("{0:.1f}".format(internal_sensor.read_humidity()))
             else:
                 if config_map['units'] == 'Imperial':
-                    temp = float("{0:.1f}".format(33.82345 * 1.8 + 32))
+                    internal_temp = float("{0:.1f}".format(33.82345 * 1.8 + 32))
                 else: 
-                    temp = float("{0:.1f}".format(33.82345))
+                    internal_temp = float("{0:.1f}".format(33.82345))
                 # Pressure must be read AFTER temperature
                 internal_mBar = float("{0:.3f}".format(78784 / 100))
                 humidity = -1
 #elevation = (1 - (mBar / 1013.25) ** .190284) * 145366.45
-            msg = json.dumps({'temp': temp, 'internal_pressure': internal_mBar, 'humidity': humidity}, indent = 4, sort_keys = True, separators=(',', ': '))
+            msg = json.dumps({'internal_temperature': internal_temp, 'internal_pressure': internal_mBar, 'humidity': humidity}, indent = 4, sort_keys = True, separators=(',', ': '))
 
         elif request['request'] == 'reload':
             read_config()

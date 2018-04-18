@@ -26,7 +26,7 @@ sensor_data_map = {}
 sensor_data_map['environment'] = {}
 sensor_data_map['bms'] = {}
 sensor_data_map['imu'] = {}
-sensor_data_map['environment']['temp'] = ""
+sensor_data_map['environment']['internal_temp'] = ""
 sensor_data_map['environment']['internal_pressure'] = ""
 sensor_data_map['environment']['humidity'] = ""
 sensor_data_map['bms']['uuid'] = ""
@@ -137,7 +137,7 @@ def read_from_sensor_daemon(sensor_socket):
                 if DEV_MODE == 1:
                     print(data)
                 if sensor_socket == config_map['env_socket']:
-                    sensor_data_map['environment']['temp'] = data['temp']
+                    sensor_data_map['environment']['temp'] = data['internal_temperature']
                     sensor_data_map['environment']['internal_pressure'] = data['internal_pressure']
                     sensor_data_map['environment']['humidity'] = data['humidity']
                 elif sensor_socket == config_map['bms_socket']:
@@ -192,12 +192,12 @@ def flight_logging_thread():
                     header = 1
                 with open(config_map['log_dir'] + "/" + logfile,  'a') as flightlog:
                     if header == 1:
-                        flightlog.write('Timestamp,Heading,Roll,Pitch,QX,QY,QZ,QW,Temperature,Internal Pressure,Humidity,ERT,DPV UUID')
+                        flightlog.write('Timestamp,Heading,Roll,Pitch,QX,QY,QZ,QW,Internal Temperature,Internal Pressure,Humidity,ERT,DPV UUID')
                         header = 0
-                    flightlog.write('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['imu']['heading']) + "," + str(sensor_data_map['imu']['roll']) + "," + str(sensor_data_map['imu']['pitch']) + "," + str(sensor_data_map['imu']['qx']) + "," + str(sensor_data_map['imu']['qy']) + "," + str(sensor_data_map['imu']['qz']) + "," + str(sensor_data_map['imu']['qw'])  + "," + str(sensor_data_map['environment']['temp']) +"," + str(sensor_data_map['environment']['internal_pressure']) + "," + str(sensor_data_map['environment']['humidity']) + "," + str(sensor_data_map['bms']['ert']) + "," + str(config_map['uuid']) + "\n")
+                    flightlog.write('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['imu']['heading']) + "," + str(sensor_data_map['imu']['roll']) + "," + str(sensor_data_map['imu']['pitch']) + "," + str(sensor_data_map['imu']['qx']) + "," + str(sensor_data_map['imu']['qy']) + "," + str(sensor_data_map['imu']['qz']) + "," + str(sensor_data_map['imu']['qw'])  + "," + str(sensor_data_map['environment']['internal_temperature']) +"," + str(sensor_data_map['environment']['internal_pressure']) + "," + str(sensor_data_map['environment']['humidity']) + "," + str(sensor_data_map['bms']['ert']) + "," + str(config_map['uuid']) + "\n")
                 if DEV_MODE == 1:
                     print("Logfile Name:",  logfile)
-                    print("Flight Log data: " + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['imu']['heading']) + "," + str(sensor_data_map['imu']['roll']) + "," + str(sensor_data_map['imu']['pitch']) + "," + str(sensor_data_map['imu']['qx']) + "," + str(sensor_data_map['imu']['qy']) + "," + str(sensor_data_map['imu']['qz']) + "," + str(sensor_data_map['imu']['qw'])  + "," + str(sensor_data_map['environment']['temp']) + "," + str(sensor_data_map['environment']['internal_pressure']) + "," + str(sensor_data_map['environment']['humidity']) + "," + str(sensor_data_map['bms']['ert']) + "," + str(config_map['uuid']))
+                    print("Flight Log data: " + '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()) + "," + str(sensor_data_map['imu']['heading']) + "," + str(sensor_data_map['imu']['roll']) + "," + str(sensor_data_map['imu']['pitch']) + "," + str(sensor_data_map['imu']['qx']) + "," + str(sensor_data_map['imu']['qy']) + "," + str(sensor_data_map['imu']['qz']) + "," + str(sensor_data_map['imu']['qw'])  + "," + str(sensor_data_map['environment']['internal_temperature']) + "," + str(sensor_data_map['environment']['internal_pressure']) + "," + str(sensor_data_map['environment']['humidity']) + "," + str(sensor_data_map['bms']['ert']) + "," + str(config_map['uuid']))
         #time.sleep(config_map['sample_rate'])
         if config_map['shutdown_threads'] is True:
             break

@@ -14,7 +14,7 @@ import socket
 from datetime import date
 
 id = 'Gavin Logging Daemon'
-version = '1.0.2'
+version = '1.0.3'
 
 DEV_MODE = 0
 
@@ -26,7 +26,7 @@ sensor_data_map = {}
 sensor_data_map['environment'] = {}
 sensor_data_map['bms'] = {}
 sensor_data_map['imu'] = {}
-sensor_data_map['environment']['internal_temp'] = ""
+sensor_data_map['environment']['internal_temperature'] = ""
 sensor_data_map['environment']['internal_pressure'] = ""
 sensor_data_map['environment']['humidity'] = ""
 sensor_data_map['bms']['uuid'] = ""
@@ -137,7 +137,7 @@ def read_from_sensor_daemon(sensor_socket):
                 if DEV_MODE == 1:
                     print(data)
                 if sensor_socket == config_map['env_socket']:
-                    sensor_data_map['environment']['temp'] = data['internal_temperature']
+                    sensor_data_map['environment']['internal_temperature'] = data['internal_temperature']
                     sensor_data_map['environment']['internal_pressure'] = data['internal_pressure']
                     sensor_data_map['environment']['humidity'] = data['humidity']
                 elif sensor_socket == config_map['bms_socket']:

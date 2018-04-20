@@ -193,7 +193,7 @@ while True:
                 else:
                     battery_percent = float("{0:.0f}".format((vbatt_actual - (battery_map['min_voltage'] * battery_map['modules'])) * 100 / ((battery_map['max_voltage']  * battery_map['modules']) - (battery_map['min_voltage'] * battery_map['modules']))))
 
-            battery_data = '{"voltage": ' + str(vbatt_actual) + ', "current": ' + '"' + str(current_actual)  + ' ' + str(adc_current_value) + '"' + ', "watts": ' + str(watts_actual) + ', "ert": ' + str(ert) + ', "percent": ' + str(battery_percent) + ','
+            battery_data = '{"voltage": ' + str(vbatt_actual) + ', "current": ' + '"' + str(current_actual)  + ' ' + str(adc_current_value) + ' ' + str(adc_current_reference) +'"' + ', "watts": ' + str(watts_actual) + ', "ert": ' + str(ert) + ', "percent": ' + str(battery_percent) + ','
             for i in range(0, battery_map['modules']):
                 battery_data = battery_data + ' "v' + str(i + 1) + '": ' + str(voltage_value[i]) + ','
             battery_data = battery_data + ' "uuid": "' + battery_map['uuid'] + '"}'

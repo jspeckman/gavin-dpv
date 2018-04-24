@@ -23,6 +23,7 @@ if DEV_MODE != 1:
     # Configure ADS11x5 parameters
     adc = Adafruit_ADS1x15.ADS1115(address=0x48, busnum=1)
     adc_GAIN = 2/3
+    adc_SPS = 16
     adc_OFFSET = .1875
     adc_VOFFSET = [5.545, 5]
     adc_ACS770_OFFSET = 13.334
@@ -149,8 +150,8 @@ while True:
     if 'request' in request:
         if request['request'] == 'data':
             if DEV_MODE != 1:
-                adc_current_value = adc.read_adc(0, gain=adc_GAIN, data_rate=8)
-                adc_current_reference = adc.read_adc(3, gain=adc_GAIN, data_rate=8)
+                adc_current_value = adc.read_adc(0, gain=adc_GAIN, data_rate=adc_SPS)
+                adc_current_reference = adc.read_adc(3, gain=adc_GAIN, data_rate=adc_SPS)
                 adc_current_reference_voltage = float("{0:.2f}".format((adc_current_reference * adc_OFFSET * .001)))
                 adc_offset_percent = adc_current_reference_voltage / 5.0
                 adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET * adc_offset_percent
@@ -159,7 +160,7 @@ while True:
                 if current_actual == .01 or current_actual == -.01:
                     current_actual = 0
                 for battery_module in range(0, battery_map['modules']):
-                    voltage_value[battery_module] = float("{0:.2f}".format(((adc.read_adc(battery_module + 1, gain=adc_GAIN, data_rate=8) * adc_OFFSET) * adc_VOFFSET[battery_module]) * .001))
+                    voltage_value[battery_module] = float("{0:.2f}".format(((adc.read_adc(battery_module + 1, gain=adc_GAIN, data_rate=adc_SPS) * adc_OFFSET) * adc_VOFFSET[battery_module]) * .001))
                 for battery_module in range(0, battery_map['modules']):
                     if battery_module < battery_map['modules'] - 1:
                         voltage_value[battery_module] = float("{0:.2f}".format(voltage_value[battery_module] - voltage_value[battery_module + 1]))

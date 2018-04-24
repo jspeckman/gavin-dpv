@@ -23,7 +23,7 @@ if DEV_MODE != 1:
     # Configure ADS11x5 parameters
     adc = Adafruit_ADS1x15.ADS1115(address=0x48, busnum=1)
     adc_GAIN = 2/3
-    adc_SPS = 16
+    adc_SPS = 64
     adc_OFFSET = .1875
     adc_VOFFSET = [5.545, 5]
     adc_ACS770_OFFSET = 13.334

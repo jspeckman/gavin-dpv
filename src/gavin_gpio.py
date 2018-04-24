@@ -138,7 +138,7 @@ def display_battery_screen():
             msg = '{"request":"data"}'
             sensorsocket.send(msg.encode())
             try:
-                data = json.loads(sensorsocket.recv(512).decode())
+                data = json.loads(sensorsocket.recv(1024).decode())
             except ValueError:
                 sensorsocket.close()
                 return

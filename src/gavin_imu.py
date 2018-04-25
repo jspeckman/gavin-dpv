@@ -9,7 +9,7 @@ from os import unlink
 import json
 from time import sleep
 import threading
-#from threading import Thread
+from threading import Thread
 import socket
 
 id = 'Gavin IMU Daemon'
@@ -32,6 +32,9 @@ IMU_AXIS_MAP = {}
 
 # setup sensor data map
 imu_data_map = {}
+
+# watchdog
+watchdog = 0
 
 # Config file location
 config_map['config_dir'] = "/opt/gavin/etc"
@@ -69,7 +72,7 @@ except OSError:
     if os.path.exists(socket_file):
         raise
         
-sensors_changed = threading.Condition()
+IMU_lock = threading.Condition()
 
 # Function to read or reread config file
 def read_config():
@@ -102,11 +105,12 @@ def read_config():
 def init_IMU():
     if DEV_MODE != 1:
         # Initialize IMU.
-        if not imu.begin():
-            raise RuntimeError('Failed to initialize BNO055!')
-        imu.set_axis_remap(**IMU_AXIS_MAP)
-        if config_map['FORCE_CALIBRATION'] != 1 and config_map['imu_calibration'] and config_map['imu_calibration'] != 'Not Ready' and config_map['imu_calibration'] != 'DEV_MODE':
-            imu.set_calibration(config_map['imu_calibration'])
+        with IMU_lock:
+            if not imu.begin():
+                raise RuntimeError('Failed to initialize BNO055!')
+            imu.set_axis_remap(**IMU_AXIS_MAP)
+            if config_map['FORCE_CALIBRATION'] != 1 and config_map['imu_calibration'] and config_map['imu_calibration'] != 'Not Ready' and config_map['imu_calibration'] != 'DEV_MODE':
+                imu.set_calibration(config_map['imu_calibration'])
             
 def read_IMU_status():
     if DEV_MODE != 1:
@@ -119,47 +123,55 @@ def read_IMU_status():
         imu_data_map['sysStatus'] = 'IMU Hardware Missing'
         
 def read_IMU_position():
+    global watchdog
     if DEV_MODE != 1:
-        try:
-            imu_data_map['heading'], imu_data_map['roll'], imu_data_map['pitch'] = imu.read_euler()
-        except RuntimeError:
-            imu_data_map['heading'] = 0
-            imu_data_map['roll'] = 0
-            imu_data_map['pitch'] = 0
-            print("IMU Communication error during euler read, reinitializing")
-            init_IMU()
-        try:
-            imu_data_map['x'], imu_data_map['y'], imu_data_map['z'], imu_data_map['w'] = imu.read_quaternion()
-        except RuntimeError:
-            imu_data_map['x'] = 0
-            imu_data_map['y'] = 0
-            imu_data_map['z'] = 0
-            imu_data_map['w'] = 0
-            print("IMU Communication error during quanternion read, reinitializing")
-            init_IMU()
+        with IMU_lock:
+            try:
+                imu_data_map['heading'], imu_data_map['roll'], imu_data_map['pitch'] = imu.read_euler()
+                imu_data_map['x'], imu_data_map['y'], imu_data_map['z'], imu_data_map['w'] = imu.read_quaternion()
+            except RuntimeError:
+                print("Warning: communication error during IMU read.")
+                imu_data_map['heading'] = 0
+                imu_data_map['roll'] = 0
+                imu_data_map['pitch'] = 0
+                imu_data_map['x'] = 0
+                imu_data_map['y'] = 0
+                imu_data_map['z'] = 0
+                imu_data_map['w'] = 0
+                watchdog = 1
             
 def calibrate_IMU(request):
     if DEV_MODE != 1:
-        imu_data_map['sys'], imu_data_map['gyro'], imu_data_map['accel'], imu_data_map['mag'] = imu.get_calibration_status()
+        with IMU_lock:
+            imu_data_map['sys'], imu_data_map['gyro'], imu_data_map['accel'], imu_data_map['mag'] = imu.get_calibration_status()
         if ((imu_data_map['sys'] < 3) or (imu_data_map['gyro'] < 3) or (imu_data_map['accel'] < 3) or (imu_data_map['mag'] < 3)) and imu_data_map['sysStatus'] != 'IMU Hardware Error':
             imu_data_map['sysStatus'] = 'Not Ready'
         elif ((imu_data_map['sys'] == 3) or (imu_data_map['gyro'] == 3) or (imu_data_map['accel'] == 3) or (imu_data_map['mag'] == 3)) and imu_data_map['sysStatus'] != 'IMU Hardware Error':
             imu_data_map['sysStatus'] = 'Ready'
         if request == 'save':
             # Grab the lock on BNO sensor access to serial access to the sensor.
-            with sensors_changed:
+            with IMU_lock:
                 if imu_data_map['sysStatus'] == 'Ready':
                     config_map['imu_calibration'] = imu.get_calibration()
         if request == 'load':
-            with sensors_changed:
+            with IMU_lock:
                 imu.set_calibration(config_map['imu_calibration'])
             
 def axis_remap_IMU():
     if DEV_MODE != 1:
-            # Grab the lock on BNO sensor access to serial access to the sensor.
-            with sensors_changed:
+            # Grab the lock on the IMU sensor access to serial access to the sensor.
+            with IMU_lock:
                 imu.set_axis_remap(**IMU_AXIS_MAP)
-                
+
+def IMU_watchdog():
+    global watchdog
+    while True:
+        if watchdog == 1:
+            print("Warning: watchdog tripped, resetting IMU...")
+            init_IMU()
+            watchdog = 0
+        sleep(1/10)
+        
 # Get values from config file
 read_config()
 init_IMU()
@@ -173,6 +185,9 @@ if imu_data_map['sysStatus'] == 'IMU Hardware Error':
         print("IMU Error persists:",  imu_data_map['status'],  imu_data_map['error'])
         print("Shutting down.")
         quit()
+
+watchdog_thread = Thread(target = IMU_watchdog)
+watchdog_thread.start()
 
 # Setup socket and 3 listeners
 serversocket.bind(socket_file)

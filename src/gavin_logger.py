@@ -265,9 +265,6 @@ while True:
        
     if 'request' in request:
         if request['request'] == 'data':
-            #read_from_sensor_daemon(config_map['env_socket'])
-            #read_from_sensor_daemon(config_map['bms_socket'])
-            #read_from_sensor_daemon(config_map['imu_socket'])
             msg = json.dumps(sensor_data_map, indent = 4, sort_keys = True, separators=(',', ': '))
                 
         elif request['request'] == 'reload':
@@ -342,27 +339,4 @@ print(id,  "exiting")
             
         # sleep until next log interval
 #        time.sleep(config_map['sample_rate'])
-        
-        
-        
-#def get_battery_file(log_dir, batt_file_prefix):
-#    batt_file_list = []
-    
-#    for input_filename in sorted(os.listdir(log_dir)):
-#        if fnmatch.fnmatch(input_filename, batt_file_prefix + "*"):
-#            batt_file_list.append(input_filename)
-            
-#    if not batt_file_list:
-#        batt_file_list.append(batt_file_prefix + str(date.today()))
-        
-#    return(log_dir + "/" + batt_file_list[0])
 
-#def get_logfile_name(log_dir):
-#    logfile_name = str(date.today()) + "."
-#    logfile_list = []
-    
-#    for input_filename in sorted(os.listdir(log_dir)):
-#        if fnmatch.fnmatch(input_filename, logfile_name + "*"):
-#            logfile_list.append(input_filename)
-
-#    return(logfile_name + str(len(logfile_list) + 1))

@@ -13,7 +13,7 @@ from threading import Thread
 import socket
 
 id = 'Gavin IMU Daemon'
-version = '1.0.3'
+version = '1.0.4'
 
 try:
     from Adafruit_BNO055 import BNO055
@@ -111,10 +111,13 @@ def init_IMU():
             imu.set_axis_remap(**IMU_AXIS_MAP)
             if config_map['FORCE_CALIBRATION'] != 1 and config_map['imu_calibration'] and config_map['imu_calibration'] != 'Not Ready' and config_map['imu_calibration'] != 'DEV_MODE':
                 imu.set_calibration(config_map['imu_calibration'])
+            IMU_lock.notify_all()
             
 def read_IMU_status():
     if DEV_MODE != 1:
-        imu_data_map['status'], imu_data_map['self_test'], imu_data_map['error'] = imu.get_system_status()
+        with IMU_lock:
+            imu_data_map['status'], imu_data_map['self_test'], imu_data_map['error'] = imu.get_system_status()
+            IMU_lock.notify()
         if (imu_data_map['error'] != 0) or (imu_data_map['status'] == 0x01) or (imu_data_map['self_test'] != 0x0F):
             imu_data_map['sysStatus'] = 'IMU Hardware Error'
         else:
@@ -139,11 +142,13 @@ def read_IMU_position():
                 imu_data_map['z'] = 0
                 imu_data_map['w'] = 0
                 watchdog = 1
+            IMU_lock.notify()
             
 def calibrate_IMU(request):
     if DEV_MODE != 1:
         with IMU_lock:
             imu_data_map['sys'], imu_data_map['gyro'], imu_data_map['accel'], imu_data_map['mag'] = imu.get_calibration_status()
+            IMU_lock.notify()
         if ((imu_data_map['sys'] < 3) or (imu_data_map['gyro'] < 3) or (imu_data_map['accel'] < 3) or (imu_data_map['mag'] < 3)) and imu_data_map['sysStatus'] != 'IMU Hardware Error':
             imu_data_map['sysStatus'] = 'Not Ready'
         elif ((imu_data_map['sys'] == 3) or (imu_data_map['gyro'] == 3) or (imu_data_map['accel'] == 3) or (imu_data_map['mag'] == 3)) and imu_data_map['sysStatus'] != 'IMU Hardware Error':
@@ -153,15 +158,18 @@ def calibrate_IMU(request):
             with IMU_lock:
                 if imu_data_map['sysStatus'] == 'Ready':
                     config_map['imu_calibration'] = imu.get_calibration()
+                IMU_lock.notify()
         if request == 'load':
             with IMU_lock:
                 imu.set_calibration(config_map['imu_calibration'])
+                IMU_lock.notify()
             
 def axis_remap_IMU():
     if DEV_MODE != 1:
             # Grab the lock on the IMU sensor access to serial access to the sensor.
             with IMU_lock:
                 imu.set_axis_remap(**IMU_AXIS_MAP)
+                IMU_lock.notify()
 
 def IMU_watchdog():
     global watchdog

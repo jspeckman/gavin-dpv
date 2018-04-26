@@ -181,13 +181,13 @@ def get_date_time():
     return(dt)
 
 def get_dpv_name():
-    p = subprocess.Popen("/bin/hostname",  shell=True,  stdout=subprocess.PIPE,  encoding='utf8')
-    hn = p.communicate()[0].strip('\n')
-    
-    return(hn)
+    return(config_map['myname'])
 
 def get_uuid():
     return(config_map['uuid'])
+
+def get_battery_voltage():
+    return("placeholder")
     
 def config_date_time():
     menu = [
@@ -442,13 +442,8 @@ def set_dpv_name():
         hostname = input(_("Enter new DPV name or c to cancel: "))
         if hostname == "c":
             return False
-        if ' ' in hostname:
-            print()
-            print(_("DPV name may not include spaces"))
-            print()
-            continue
         else:
-            cmd = '/usr/bin/hostnamectl set-hostname ' + hostname
+            cmd = '/usr/bin/hostnamectl set-hostname ' + hostname.replace(" ", "-")
             os.system(cmd)
             config_map['myname'] = hostname
             write_config()
@@ -851,10 +846,10 @@ def main_menu():
         [ _("Axis Mapping"),  config_axis_map ], 
         [ _("Electrical Setup"),  config_electrical ], 
         [ _("Configure WiFi"),  config_wifi ], 
-        [ _("First Time Setup Wizzard"),  config_first_run ], 
         [ _("System Shell"),  system_shell ], 
         [ _("Reboot"),  system_reboot ], 
         [ _("Shutdown"),  system_shutdown ], 
+        [ _("Reset to Defaults"),  config_first_run ],
     ]
 
     menu_map = {}
@@ -884,7 +879,7 @@ def main_menu():
             print(_("DPV Name:"),  get_dpv_name())
             print(_("UUID:"),  get_uuid())
             print(_("Opperating in"))
-            print(_("Current battery voltage:"))
+            print(_("Current battery voltage:"),  get_battery_voltage())
             print()
         except:
             pass

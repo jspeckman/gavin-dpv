@@ -17,7 +17,7 @@ from datetime import date
 import socket
 
 id = 'Gavin GPIO Daemon'
-version = '1.0.3'
+version = '1.0.4'
 
 # setup config map
 config_map = {}
@@ -126,8 +126,8 @@ def display_hotspot_screen():
 def display_battery_screen():
     display_clear()
     connect_failed = 0
-    sensorsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sensor_address = ('127.0.0.1', 1270)
+    sensorsocket = socket.socket(socket.UNIX_INET, socket.SOCK_STREAM)
+    sensor_address = config_map['logger_socket']
     try:
         sensorsocket.connect(sensor_address)
     except:
@@ -235,8 +235,8 @@ def nose_interrupt(channel):
             system('/usr/bin/autohotspot')
             display_hotspot_screen()
         if screen_counter == 3 and screen_sleep < 31:
-            sensorsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sensor_address = ('127.0.0.1', 1270)
+            sensorsocket = socket.socket(socket.UNIX_INET, socket.SOCK_STREAM)
+            sensor_address = config_map['logger_socket']
         
             try:
                 sensorsocket.connect(sensor_address)

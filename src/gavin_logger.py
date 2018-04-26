@@ -14,7 +14,7 @@ import socket
 from datetime import date
 
 id = 'Gavin Logging Daemon'
-version = '1.0.3'
+version = '1.0.4'
 
 DEV_MODE = 0
 
@@ -62,10 +62,9 @@ config_map['flight_log'] = 'inactive'
 config_map['shutdown_threads'] = False
 
 # Socket values
-serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+serversocket = socket.socket(socket.UNIX_INET, socket.SOCK_STREAM)
 serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-host = "127.0.0.1"
-port = 1270
+socket_file = "/tmp/gavin_logger.socket"
 
 sensors_changed = threading.Condition()
 
@@ -237,7 +236,7 @@ def battery_logging_thread():
 read_config()
 
 # Setup socket and 3 listeners
-serversocket.bind((host, port))
+serversocket.bind(socket_file)
 serversocket.listen(3)
 
 data_agg_thread = Thread(target = data_aggrigation_thread)
@@ -246,7 +245,7 @@ battery_log_thread = Thread(target = battery_logging_thread)
 
 data_agg_thread.start()
 
-print(id,  version,  "listening on port",  port)
+print(id,  version,  "listening on",  socket_file)
 
 # Main loop
 while True:

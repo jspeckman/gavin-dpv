@@ -9,7 +9,7 @@ import json
 import socket
 
 id = 'Gavin Environmental Daemon'
-version = '1.0.3'
+version = '1.0.4'
 
 try:
     from Adafruit_BME280 import *
@@ -59,9 +59,9 @@ def read_config():
 # Get values from config file
 read_config()
 
-# Setup socket and 3 listeners
+# Setup socket and 2 listeners
 serversocket.bind(socket_file)
-serversocket.listen(3)
+serversocket.listen(2)
 
 print(id,  version,  "listening on",  socket_file)
 

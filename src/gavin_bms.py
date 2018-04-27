@@ -10,7 +10,7 @@ import json
 import socket
 
 id = 'Gavin BMS Daemon'
-version = '1.0.2'
+version = '1.0.3'
 
 try:
     import Adafruit_ADS1x15
@@ -126,9 +126,9 @@ read_battery_config()
 for i in range(0, battery_map['modules']):
     voltage_value.append(0)
     
-# Setup socket and 3 listeners
+# Setup socket and 2 listeners
 serversocket.bind(socket_file)
-serversocket.listen(3)
+serversocket.listen(2)
 
 print(id,  version,  "listening on",  socket_file)
 

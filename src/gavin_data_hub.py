@@ -15,7 +15,7 @@ import socket
 from datetime import date
 
 id = 'Gavin Data Hub Daemon'
-version = '1.0.5'
+version = '1.0.6'
 
 DEV_MODE = 0
 
@@ -242,9 +242,9 @@ def battery_logging_thread():
 # Get values from config file
 read_config()
 
-# Setup socket and 3 listeners
+# Setup socket and 2 listeners
 serversocket.bind(socket_file)
-serversocket.listen(3)
+serversocket.listen(2)
 
 data_agg_thread = Thread(target = data_aggregation_thread)
 flight_log_thread = Thread(target = flight_logging_thread)

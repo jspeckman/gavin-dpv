@@ -13,7 +13,7 @@ from threading import Thread
 import socket
 
 id = 'Gavin IMU Daemon'
-version = '1.0.4'
+version = '1.0.5'
 
 try:
     from Adafruit_BNO055 import BNO055
@@ -197,9 +197,9 @@ if imu_data_map['sysStatus'] == 'IMU Hardware Error':
 watchdog_thread = Thread(target = IMU_watchdog)
 watchdog_thread.start()
 
-# Setup socket and 3 listeners
+# Setup socket and 2 listeners
 serversocket.bind(socket_file)
-serversocket.listen(3)
+serversocket.listen(2)
 
 print(id,  version,  "listening on",  socket_file)
 

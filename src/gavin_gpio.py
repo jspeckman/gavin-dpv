@@ -126,25 +126,25 @@ def display_hotspot_screen():
 def display_battery_screen():
     display_clear()
     connect_failed = 0
-    sensorsocket = socket.socket(socket.UNIX_INET, socket.SOCK_STREAM)
+    sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     sensor_address = config_map['logger_socket']
     try:
         sensorsocket.connect(sensor_address)
     except:
-        print("unable to connect to Gavin logging daemon")
+        print("unable to connect to Gavin data hub daemon")
         connect_failed = 1
     if connect_failed == 0:
         try:
-            msg = '{"request":"data"}'
+            msg = '{"request":"data bms"}'
             sensorsocket.send(msg.encode())
             try:
-                data = json.loads(sensorsocket.recv(1024).decode())
+                data = json.loads(sensorsocket.recv(512).decode())
             except ValueError:
                 sensorsocket.close()
                 return
             if len(data) > 0:
-                    percent = data['bms']['percent']
-                    ert = data['bms']['ert'] / 60
+                    percent = data['percent']
+                    ert = data['ert'] / 60
         except socket.error:
             print("unable to request from",  id)
         

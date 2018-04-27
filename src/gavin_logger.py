@@ -1,9 +1,10 @@
 #!/usr/local/bin/python3.6 -u
 
-# Daemon to read values from the sensor daemons and write to log files
+# Daemon to aggregate values from the sensor daemons and write to log files
 # Data is requested through a json string, and returned as a json string
 
 import os.path
+from os import unlink
 import fnmatch
 import time
 import datetime
@@ -13,8 +14,8 @@ import json
 import socket
 from datetime import date
 
-id = 'Gavin Logging Daemon'
-version = '1.0.4'
+id = 'Gavin Data Hub Daemon'
+version = '1.0.5'
 
 DEV_MODE = 0
 
@@ -62,12 +63,18 @@ config_map['flight_log'] = 'inactive'
 config_map['shutdown_threads'] = False
 
 # Socket values
-serversocket = socket.socket(socket.UNIX_INET, socket.SOCK_STREAM)
+serversocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-socket_file = "/tmp/gavin_logger.socket"
+socket_file = "/tmp/gavin_data_hub.socket"
 
 sensors_changed = threading.Condition()
 
+try:
+    os.unlink(socket_file)
+except OSError:
+    if os.path.exists(socket_file):
+        raise
+        
 # Function to read or reread config file
 def read_config():
     if os.path.isfile(config_map['config_dir'] + "/" + config_map['config_file']):
@@ -162,8 +169,8 @@ def read_from_sensor_daemon(sensor_socket):
         
         sensorsocket.close()
     
-# Data aggrigation thread
-def data_aggrigation_thread():
+# Data aggregation thread
+def data_aggregation_thread():
     while True:
         with sensors_changed:
             read_from_sensor_daemon(config_map['env_socket'])
@@ -239,7 +246,7 @@ read_config()
 serversocket.bind(socket_file)
 serversocket.listen(3)
 
-data_agg_thread = Thread(target = data_aggrigation_thread)
+data_agg_thread = Thread(target = data_aggregation_thread)
 flight_log_thread = Thread(target = flight_logging_thread)
 battery_log_thread = Thread(target = battery_logging_thread)
 
@@ -265,7 +272,16 @@ while True:
     if 'request' in request:
         if request['request'] == 'data':
             msg = json.dumps(sensor_data_map, indent = 4, sort_keys = True, separators=(',', ': '))
-                
+            
+        elif request['request'] == 'data environment':
+            msg = json.dumps(sensor_data_map['environment'],  indent = 4,  sort_keys = True,  separators = (',',  ': '))
+            
+        elif request['request'] == 'data bms':
+            msg = json.dumps(sensor_data_map['bms'],  indent = 4,  sort_keys = True,  separators = (',', ': '))
+            
+        elif request['request'] == 'data imu':
+            msg = json.dumps(sensor_data_map['imu'],  indent = 4,  sort_keys = True,  separators = (',',  ': '))
+            
         elif request['request'] == 'reload':
             read_config()
             msg = json.dumps({'reload': 'complete'}, indent = 4, sort_keys = True, separators=(',', ': '))
@@ -274,8 +290,10 @@ while True:
             config_map['shutdown_threads'] = True
             msg = json.dumps({'shutdown': 'complete'}, indent = 4, sort_keys = True, separators=(',', ': '))
             break
+            
         elif request['request'] == 'version':
             msg = json.dumps({'Name': id, 'Version': version}, indent = 4, sort_keys = True, separators=(',', ': '))
+            
         elif request['request'] == 'logging start':
             if config_map['flight_log'] == 'inactive':
                 config_map['flight_log'] = 'active'
@@ -286,11 +304,14 @@ while True:
                 msg = json.dumps({'logging': 'started'}, indent = 4, sort_keys = True, separators=(',', ': '))
             else:
                 msg = json.dumps({'logging': 'running'}, indent = 4, sort_keys = True, separators=(',', ': '))
+                
         elif request['request'] == 'logging stop':
             config_map['flight_log'] = 'inactive'
             msg = json.dumps({'logging': 'stopped'}, indent = 4, sort_keys = True, separators=(',', ': '))
+            
         else:
             msg = json.dumps({'request': 'unknown'}, indent = 4, sort_keys = True, separators=(',', ': '))
+            
     else:
         if request != '':
             msg = json.dumps({'request': 'unknown'}, indent = 4, sort_keys = True, separators=(',', ': '))

@@ -17,7 +17,7 @@ from datetime import date
 import socket
 
 id = 'Gavin GPIO Daemon'
-version = '1.0.4'
+version = '1.0.5'
 
 # setup config map
 config_map = {}
@@ -55,14 +55,14 @@ screen_sleep = 0
 logging_enabled = 0
 
 def get_logfile_name():
-    logfile_name = "flight_log-" + str(date.today()) + "."
+    logfile_name = "flight_log-%s." % (str(date.today()))
     logfile_list = []
     
     for input_filename in sorted(os.listdir(config_map['log_dir'])):
         if fnmatch.fnmatch(input_filename, logfile_name + "*"):
             logfile_list.append(input_filename)
 
-    return(logfile_name + str(len(logfile_list) ) + ".csv")
+    return('%s%s.scv' % (logfile_name, str(len(logfile_list))))
 
 def display_clear():
     display.clear()
@@ -255,7 +255,7 @@ def nose_interrupt(channel):
             data = sensorsocket.recv(512).decode()
             sensorsocket.close()
             if 'started' or 'running' in data:
-                if os.path.exists(config_map['log_dir'] + "/" + get_logfile_name()):
+                if os.path.exists('%s/%s' % (config_map['log_dir'], get_logfile_name())):
                     logging_enabled = 1
                     display_logging_screen(logging_enabled)
             if 'stopped' in data:

@@ -61,8 +61,8 @@ IMU_AXIS_MAP['z_sign'] = 0x01
 
 # Function to read or reread config file
 def read_config():
-    if os.path.isfile(config_map['config_dir'] + "/" + config_map['config_file']):
-        with open(config_map['config_dir'] + "/" + config_map['config_file'], 'r') as configfile:
+    if os.path.isfile('%s/%s' % (config_map['config_dir'], config_map['config_file'])):
+        with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'r') as configfile:
             try:
                 config = json.load(configfile)
                 if 'first_run' in config:
@@ -94,8 +94,8 @@ def read_config():
         print("Config file not found, loading defaults.")
 
 def read_battery_config():
-    if os.path.isfile(config_map['config_dir'] + "/" + battery_map['config_file']):
-        with open(config_map['config_dir'] + "/" + battery_map['config_file'], 'r') as battery_config:
+    if os.path.isfile('%s/%s' % (config_map['config_dir'], battery_map['config_file'])):
+        with open('%s/%s' % (config_map['config_dir'], battery_map['config_file']), 'r') as battery_config:
             try:
                 battery_specs = json.load(battery_config)
                 battery_specs = max(battery_specs.items(), key=lambda i: i[1]['installed'])
@@ -127,7 +127,7 @@ def read_battery_config():
         print("Battery config file not found, loading defaults.")
         
 def write_config():
-    with open(config_map['config_dir'] + "/" + config_map['config_file'], 'w') as configfile:
+    with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'w') as configfile:
         config_json = json.dumps({'first_run': config_map['first_run'], 'uuid': config_map['uuid'], 'myname': config_map['myname'],
                                   'calibration': {'imu': config_map['imu_calibration']}, 'axis_map': {'x': IMU_AXIS_MAP['x'], 'x_sign': IMU_AXIS_MAP['x_sign'], 'y': IMU_AXIS_MAP['y'], 'y_sign': IMU_AXIS_MAP['y_sign'], 'z': IMU_AXIS_MAP['z'], 'z_sign': IMU_AXIS_MAP['z_sign']},
                                   'motor': {'watts': config_map['motor_watts']}, 'units': config_map['units'], 'bno_update_hz': config_map['bno_update_hz'],
@@ -135,9 +135,9 @@ def write_config():
         configfile.write(config_json)
 
 def write_battery_config():
-    battery_key = "battery-" + battery_map['uuid']
-    if os.path.isfile(config_map['config_dir'] + "/" + battery_map['config_file']):
-        with open(config_map['config_dir'] + "/" + battery_map['config_file'], 'r') as battery_config:
+    battery_key = "battery-%s" % (battery_map['uuid'])
+    if os.path.isfile('%s/%s' % (config_map['config_dir'], battery_map['config_file'])):
+        with open('%s/%s' % (config_map['config_dir'], battery_map['config_file']), 'r') as battery_config:
             try:
                 battery_specs = json.load(battery_config)
             except ValueError:
@@ -153,16 +153,16 @@ def write_battery_config():
             battery_specs[battery_key]['ampHr'] = battery_map['amphr']
             battery_specs[battery_key]['min_voltage'] = battery_map['min_voltage']
             battery_specs[battery_key]['max_voltage'] = battery_map['max_voltage']
-            with open(config_map['config_dir'] + "/" + battery_map['config_file'], 'w') as battery_config:
+            with open('%s/%s' % (config_map['config_dir'], battery_map['config_file']), 'w') as battery_config:
                 battery_config.write(json.dumps(battery_specs, indent = 4, sort_keys = True, separators=(',', ': ')))
                 return True
         else:
-            with open(config_map['config_dir'] + "/" + battery_map['config_file'], 'w') as battery_config:
+            with open('%s/%s' % (config_map['config_dir'], battery_map['config_file']), 'w') as battery_config:
                 battery_specs[battery_key] = json.loads({'uuid': battery_map['uuid'],  'installed': battery_map['installed'],  'mfg': battery_map['mfg'],  'model': battery_map['model'],  'weight': battery_map['weight'],  'modules': battery_map['modules'],  'chemistry': battery_map['chemistry'],  'voltage': battery_map['voltage'],  'ampHr': battery_map['amphr'],  'min_voltage': battery_map['min_voltage'],  'max_voltage': battery_map['max_voltage']}, indent = 4, sort_keys = True, separators=(',', ': '))
                 battery_config.write(battery_specs)
                 return True
     else:
-        with open(config_map['config_dir'] + "/" + battery_map['config_file'], 'w') as battery_config:
+        with open('%s/%s' % (config_map['config_dir'], battery_map['config_file']), 'w') as battery_config:
             battery_json = json.dumps({battery_key: {'uuid': battery_map['uuid'],  'installed': battery_map['installed'],  'mfg': battery_map['mfg'],  'model': battery_map['model'],  'weight': battery_map['weight'],  'modules': battery_map['modules'],  'chemistry': battery_map['chemistry'],  'voltage': battery_map['voltage'],  'ampHr': battery_map['amphr'],  'min_voltage': battery_map['min_voltage'],  'max_voltage': battery_map['max_voltage']}}, indent = 4, sort_keys = True, separators=(',', ': '))
             battery_config.write(battery_json)
             return True
@@ -424,7 +424,7 @@ def set_date():
         date = input(_("Enter date (YYYYMMDD) or c to cancel: "))
         if date == "c":
             return False
-        cmd = '/bin/date +%Y%m%d -s "' + date + '"'
+        cmd = '/bin/date +%Y%m%d -s "%s"' % (date)
         os.system(cmd)
         return True
     
@@ -433,7 +433,7 @@ def set_time():
         time = input(_("Enter time (HH:MM:SS) or c to cancel: "))
         if time == "c":
             return False
-        cmd = '/bin/date +%T -s "' + time + '"'
+        cmd = '/bin/date +%T -s "%s"' % (time)
         os.system(cmd)
         return True
 
@@ -443,7 +443,7 @@ def set_dpv_name():
         if hostname == "c":
             return False
         else:
-            cmd = '/usr/bin/hostnamectl set-hostname ' + hostname.replace(" ", "-")
+            cmd = '/usr/bin/hostnamectl set-hostname %s' % (hostname.replace(" ", "-"))
             os.system(cmd)
             config_map['myname'] = hostname
             write_config()

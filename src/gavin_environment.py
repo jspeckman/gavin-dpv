@@ -45,8 +45,8 @@ except OSError:
 
 # Function to read or reread config file
 def read_config():
-    if os.path.isfile(config_map['config_dir'] + "/" + config_map['config_file']):
-        with open(config_map['config_dir'] + "/" + config_map['config_file'], 'r') as configfile:
+    if os.path.isfile('%s/%s' % (config_map['config_dir'], config_map['config_file'])):
+        with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'r') as configfile:
             try:
                 config = json.load(configfile)
                 if 'units' in config:

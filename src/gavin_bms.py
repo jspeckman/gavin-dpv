@@ -10,7 +10,7 @@ import json
 import socket
 
 id = 'Gavin BMS Daemon'
-version = '1.0.3'
+version = '1.0.4'
 
 try:
     import Adafruit_ADS1x15
@@ -169,6 +169,7 @@ while True:
                 voltage_value[0] = 12.33
                 voltage_value[1] = 12.29
                 adc_current_value = 13989   #Debugging
+                adc_current_reference = 28000
                 current_actual = 16
 
             vbatt_actual = float("{0:.2f}".format(sum(voltage_value)))
@@ -194,10 +195,10 @@ while True:
                 else:
                     battery_percent = float("{0:.0f}".format((vbatt_actual - (battery_map['min_voltage'] * battery_map['modules'])) * 100 / ((battery_map['max_voltage']  * battery_map['modules']) - (battery_map['min_voltage'] * battery_map['modules']))))
 
-            battery_data = '{"voltage": ' + str(vbatt_actual) + ', "current": ' + '"' + str(current_actual)  + ' ' + str(adc_current_value) + ' ' + str(adc_current_reference) +'"' + ', "watts": ' + str(watts_actual) + ', "ert": ' + str(ert) + ', "percent": ' + str(battery_percent) + ','
+            battery_data = '{"voltage": %s, "current": "%s %s %s", "watts": %s, "ert": %s, "percent": %s,' % (str(vbatt_actual),  str(current_actual), str(adc_current_value), str(adc_current_reference), str(watts_actual), str(ert), str(battery_percent))
             for i in range(0, battery_map['modules']):
-                battery_data = battery_data + ' "v' + str(i + 1) + '": ' + str(voltage_value[i]) + ','
-            battery_data = battery_data + ' "uuid": "' + battery_map['uuid'] + '"}'
+                battery_data = '%s "v%s": %s, ' % (battery_data,  str(i + 1),  str(voltage_value[i]))
+            battery_data = '%s "uuid": "%s"}' % (battery_data, battery_map['uuid'])
             msg = json.dumps(json.loads(battery_data), indent = 4, sort_keys = True, separators=(',', ': '))
             
         elif request['request'] == 'reload':

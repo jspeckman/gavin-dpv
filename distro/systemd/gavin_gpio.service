@@ -1,6 +1,6 @@
 [Unit]
 Description=Gavin GPIO Daemon
-After=network-online.target syslog.target gavin_logger.service
+After=network-online.target syslog.target gavin_data_hub.service
 
 [Service]
 Type=simple

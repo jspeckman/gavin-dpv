@@ -17,13 +17,13 @@ from datetime import date
 import socket
 
 id = 'Gavin GPIO Daemon'
-version = '1.0.5'
+version = '1.0.6'
 
 # setup config map
 config_map = {}
 
 config_map['log_dir'] = "/opt/gavin/log"
-config_map['logger_socket'] = '/tmp/gavin_logger.socket'
+config_map['logger_socket'] = '/tmp/gavin_data_hub.socket'
 
 # GPIO Pin Definitons:
 core_button = 4
@@ -235,7 +235,7 @@ def nose_interrupt(channel):
             system('/usr/bin/autohotspot')
             display_hotspot_screen()
         if screen_counter == 3 and screen_sleep < 31:
-            sensorsocket = socket.socket(socket.UNIX_INET, socket.SOCK_STREAM)
+            sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sensor_address = config_map['logger_socket']
         
             try:

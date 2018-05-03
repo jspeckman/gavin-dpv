@@ -2,10 +2,9 @@
 
 # Daemon to read GPIO buttons
 
-import RPi.GPIO as GPIO
+from gpiozero import Button
 import Adafruit_SSD1306
 import time
-import fnmatch
 import json
 from os import system
 from subprocess import check_output
@@ -13,9 +12,11 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 import socket
+from threading import Thread
+from signal import pause
 
 id = 'Gavin GPIO Daemon'
-version = '1.0.6'
+version = '1.1.0'
 
 # setup config map
 config_map = {}
@@ -23,14 +24,9 @@ config_map = {}
 config_map['log_dir'] = "/opt/gavin/log"
 config_map['data_hub_socket'] = '/tmp/gavin_data_hub.socket'
 
-# GPIO Pin Definitons:
-core_button = 4
-nose_button = 17
-
-# GPIO Setup:
-GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme
-GPIO.setup(core_button, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Button pin set as input w/ pull-up
-GPIO.setup(nose_button, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Button pin set as input w/ pull-up
+# GPIO Button Definitons:
+core_button = Button(pin=4,  hold_time=4)
+nose_button = Button(pin=17,  hold_time=4)
 
 # Display Setup:
 display = Adafruit_SSD1306.SSD1306_128_64(rst=None)
@@ -173,10 +169,6 @@ def button_interrupt(channel):
     core_button_status = 0
     nose_button_status = 0
     
-    start_time = time.time()
-    while GPIO.input(channel) == 0:
-        pass
-    
     if channel == core_button:
         button_time = time.time() - start_time
     
@@ -248,16 +240,68 @@ def button_interrupt(channel):
             if screen_counter == 4 and screen_sleep < 31:
                 system('shutdown -H -h now')
 
-#GPIO.add_event_detect(core_button, GPIO.FALLING, callback=button_interrupt, bouncetime=40)
-GPIO.add_event_detect(nose_button, GPIO.FALLING, callback=button_interrupt, bouncetime=40)
-
-display_clear()
-print(id,  version,  "ready")
-
-if screen_counter == 0:
-    display_logo()
+def cycle_screen(button,  logging_enabled):
+    global screen_counter
+    global screen_sleep
     
-try:
+    if screen_sleep < 31:
+        screen_counter = screen_counter + 1
+    if screen_counter > 4:
+        screen_counter = 1
+                
+    screen_sleep = 0
+    
+    if screen_counter == 1:
+        display_battery_screen()
+    elif screen_counter == 2:
+        display_hotspot_screen()
+    elif screen_counter == 3:
+        display_logging_screen(logging_enabled)
+    elif screen_counter == 4:
+        display_shutdown_screen()
+
+def core_action():
+    system('reboot')
+
+def nose_action(button,  screen_number):
+    global screen_sleep
+    global logging_enabled
+    
+    if screen_number == 2 and screen_sleep < 31:
+        system('/usr/bin/autohotspot')
+        display_hotspot_screen()
+    elif screen_number == 3 and screen_sleep < 31:
+        sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sensor_address = config_map['data_hub_socket']
+        
+        try:
+            sensorsocket.connect(sensor_address)
+        except:
+            print("unable to connect to Gavin Logging Daemon")
+        
+        try:
+            if logging_enabled == 0:
+                msg = '{"request":"logging start"}'
+            else:
+                msg = '{"request":"logging stop"}'
+            sensorsocket.send(msg.encode())
+        except socket.error:
+            print("unable to request logging activation")
+                
+        data = sensorsocket.recv(512).decode()
+        sensorsocket.close()
+        if 'started' in data or 'running' in data:
+            logging_enabled = 1
+            display_logging_screen(logging_enabled)
+        elif 'stopped' in data:
+            logging_enabled = 0
+            display_logging_screen(logging_enabled)
+    elif screen_counter == 4 and screen_sleep < 31:
+        system('shutdown -H -h now')
+        
+def screen_saver():
+    global screen_sleep
+    global screen_counter
     while True:
         if screen_sleep < 31:
             screen_sleep += 1
@@ -267,8 +311,21 @@ try:
                 screen_counter = 1
         time.sleep(1)
         
+screen_saver_thread = Thread(target=screen_saver())
+
+display_clear()
+print(id,  version,  "ready")
+
+if screen_counter == 0:
+    display_logo()
+screen_saver_thread.start()
+
+try:
+    while True:
+        nose_button.when_pressed = cycle_screen(logging_enabled)
+        core_button.when_held = core_action()
+        nose_button_when_held = nose_action(screen_counter)
+        pause()
+        
 except KeyboardInterrupt: # If CTRL+C is pressed, exit cleanly:
-    GPIO.cleanup() # cleanup all GPIO
- 
-GPIO.cleanup()
-print(id,  "exiting")
+    print(id,  "exiting")

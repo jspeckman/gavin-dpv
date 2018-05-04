@@ -311,7 +311,7 @@ def screen_saver():
                 screen_counter = 1
         time.sleep(1)
         
-screen_saver_thread = Thread(target=screen_saver())
+screen_saver_thread = Thread(target=screen_saver)
 
 display_clear()
 print(id,  version,  "ready")
@@ -322,9 +322,9 @@ screen_saver_thread.start()
 
 try:
     while True:
-        nose_button.when_pressed = cycle_screen(logging_enabled)
+        nose_button.when_pressed = cycle_screen(nose_button, logging_enabled)
         core_button.when_held = core_action()
-        nose_button_when_held = nose_action(screen_counter)
+        nose_button_when_held = nose_action(nose_button, screen_counter)
         pause()
         
 except KeyboardInterrupt: # If CTRL+C is pressed, exit cleanly:

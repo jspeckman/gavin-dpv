@@ -15,7 +15,7 @@ import socket
 from datetime import date
 
 id = 'Gavin Data Hub Daemon'
-version = '1.0.7'
+version = '1.0.8'
 
 DEV_MODE = 0
 
@@ -171,13 +171,24 @@ def read_from_sensor_daemon(sensor_socket):
     
 # Data aggregation thread
 def data_aggregation_thread():
+    counter = 0
     while True:
-        with sensors_changed:
-            read_from_sensor_daemon(config_map['env_socket'])
-            read_from_sensor_daemon(config_map['bms_socket'])
-            read_from_sensor_daemon(config_map['imu_socket'])
-            sensors_changed.notifyAll()
-        time.sleep(config_map['sample_rate'])
+        if config_map['flight_log'] == 'active':
+            with sensors_changed:
+                read_from_sensor_daemon(config_map['env_socket'])
+                read_from_sensor_daemon(config_map['bms_socket'])
+                read_from_sensor_daemon(config_map['imu_socket'])
+                sensors_changed.notifyAll()
+            time.sleep(1/2)
+        if config_map['flight_log'] == 'inactive':
+            with sensors_changed:
+                read_from_sensor_daemon(config_map['env_socket'])
+                if counter >= 120:
+                    read_from_sensor_daemon(config_map['bms_socket'])
+                    counter = 0
+                sensors_changed.notifyAll()
+            counter += 1
+            time.sleep(1/2)
         if config_map['shutdown_threads'] is True:
             break
     
@@ -204,7 +215,7 @@ def flight_logging_thread():
                 if DEV_MODE == 1:
                     print("Logfile Name:",  logfile)
                     print('Flight Log data: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()),  str(sensor_data_map['imu']['heading']),  str(sensor_data_map['imu']['roll']),  str(sensor_data_map['imu']['pitch']),  str(sensor_data_map['imu']['qx']),  str(sensor_data_map['imu']['qy']),  str(sensor_data_map['imu']['qz']),  str(sensor_data_map['imu']['qw']),  str(sensor_data_map['environment']['internal_temperature']),  str(sensor_data_map['environment']['internal_pressure']), str(sensor_data_map['environment']['humidity']), str(sensor_data_map['bms']['ert']), str(config_map['uuid'])))
-        #time.sleep(config_map['sample_rate'])
+        time.sleep(config_map['sample_rate'])
         if config_map['shutdown_threads'] is True:
             break
     if DEV_MODE == 1:
@@ -233,7 +244,7 @@ def battery_logging_thread():
                 if DEV_MODE == 1:
                     print("Logfile Name:",  logfile)
                     print('%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(sensor_data_map['bms']['voltage']), str(sensor_data_map['bms']['v1']), str(sensor_data_map['bms']['v2']), str(sensor_data_map['bms']['watts']), str(sensor_data_map['bms']['current']), str(sensor_data_map['bms']['percent']), str(sensor_data_map['bms']['ert']), str(sensor_data_map['bms']['uuid'])))
-                    #time.sleep(config_map['sample_rate'])
+                    time.sleep(config_map['sample_rate'])
         if config_map['shutdown_threads'] is True:
             break
     if DEV_MODE == 1:

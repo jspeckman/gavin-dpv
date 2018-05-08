@@ -15,7 +15,7 @@ import socket
 from datetime import date
 
 id = 'Gavin Data Hub Daemon'
-version = '1.0.8'
+version = '1.0.9'
 
 DEV_MODE = 0
 
@@ -320,6 +320,12 @@ while True:
             config_map['flight_log'] = 'inactive'
             msg = json.dumps({'logging': 'stopped'}, indent = 4, sort_keys = True, separators=(',', ': '))
             
+        elif request['request'] == 'logging status':
+            if config_map['flight_log'] == 'inactive':
+                msg = json.dumps({'logging': 'stopped'}, indent = 4, sort_keys = True, separators=(',', ': '))
+            elif config_map['flight_log'] == 'active':
+                msg = json.dumps({'logging': 'running'}, indent = 4, sort_keys = True, separators=(',', ': '))
+                
         else:
             msg = json.dumps({'request': 'unknown'}, indent = 4, sort_keys = True, separators=(',', ': '))
             

@@ -7,7 +7,7 @@ import socket
 id = 'Gavin GUI'
 version = '0.0.1'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
-port = 8080
+port = 80
 
 
 class gavin_gui(BaseHTTPRequestHandler):
@@ -22,24 +22,25 @@ class gavin_gui(BaseHTTPRequestHandler):
         
         self._set_headers()
         self.wfile.write(bytes("<html><body>", "utf-8"))
-        self.wfile.write(bytes('<center><h1>Battery</h1></center>', "utf-8"))
+        self.wfile.write(bytes('<br>',  "utf-8"))
+        self.wfile.write(bytes('<center><p style="font-size:100px;"><strong>Battery</p></center>', "utf-8"))
         if battery_percent >= 75:
-            self.wfile.write(bytes('<center><p style="font-size:30px;color:green"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+            self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:150px;color:green"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
         elif 63 <= battery_percent < 75:
-            self.wfile.write(bytes('<center><p style="font-size:30px;color:orange"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+            self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:150px;color:orange"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
         elif 0 <= battery_percent < 63:
-            self.wfile.write(bytes('<center><p style="font-size:30px;color:red"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+            self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:150px;color:red"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
         elif battery_percent == -1:
-            self.wfile.write(bytes('<center><p style="font-size:30px;color:red"><strong>Unable to get battery status</strong></p></center>', "utf-8"))
-        self.wfile.write(bytes('<center><p style="font-size:20px;">Estimated Runtime:</p></center>', "utf-8"))
-        self.wfile.write(bytes('<center><p style="font-size:20px;">%d Minutes</p></center>' % (battery_ert), "utf-8"))
-        self.wfile.write(bytes('<p></p>',  "utf-8"))
+            self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get battery status</strong></p></center>', "utf-8"))
+        self.wfile.write(bytes('<center><p style="font-size:50px;">Estimated Runtime:</p></center>', "utf-8"))
+        self.wfile.write(bytes('<center><p style="font-size:40px;">%d Minutes</p></center>' % (battery_ert), "utf-8"))
+        self.wfile.write(bytes('<br><br><br><br><br><br><br><br><br><br><br><br>',  "utf-8"))
         if logging_status == 0:
-            self.wfile.write(bytes('<center><p style="font-size:20px;"><form action="/" method="post"><input type="hidden" name="logging" value="start"><button type="submit">Start Logging</button></form></p></center>', "utf-8"))
+            self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="start"><button style="font-size:60px;height:200px;width:500px" type="submit">Start Logging</button></form></p></center>', "utf-8"))
         elif logging_status == 1:
-            self.wfile.write(bytes('<center><p style="font-size:20px;"><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button type="submit">Stop Logging</button></p></center>', "utf-8"))
+            self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:60px;height:200px;width:500px" type="submit">Stop Logging</button></p></center>', "utf-8"))
         elif logging_status == -1:
-             self.wfile.write(bytes('<center><p style="font-size:30px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
+             self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
         
         self.wfile.write(bytes("</body></html>", "utf-8"))
         

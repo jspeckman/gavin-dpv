@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6 -u
+#!/usr/local/bin/python3.6 -u
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json

@@ -116,7 +116,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                 else:
                     msg = '{"request":"logging stop"}'
                 sensorsocket.send(msg.encode())
-                data = sensorsocket.recv(512).decode()
+                sensorsocket.recv(512).decode()
             except socket.error:
                 print("unable to request logging activation")
         

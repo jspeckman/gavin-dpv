@@ -14,13 +14,10 @@ from PIL import ImageFont
 import socket
 
 id = 'Gavin GPIO Daemon'
-version = '1.0.6'
+version = '1.0.7'
 
 # setup config map
-config_map = {}
-
-config_map['log_dir'] = "/opt/gavin/log"
-config_map['logger_socket'] = '/tmp/gavin_data_hub.socket'
+data_hub_socket = '/tmp/gavin_data_hub.socket'
 
 # GPIO Pin Definitons:
 core_button = 4
@@ -50,7 +47,6 @@ battery_font = ImageFont.truetype('/opt/gavin/share/Minecraftia-Regular.ttf', 26
 # Track screen to display
 screen_counter = 0
 screen_sleep = 0
-logging_enabled = 0
 
 def display_clear():
     display.clear()
@@ -115,7 +111,7 @@ def display_battery_screen():
     display_clear()
     connect_failed = 0
     sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sensor_address = config_map['logger_socket']
+    sensor_address = data_hub_socket
     try:
         sensorsocket.connect(sensor_address)
     except:
@@ -137,6 +133,9 @@ def display_battery_screen():
             print("unable to request from",  id)
         
         sensorsocket.close()
+    else:
+        percent = -1
+        ert = -1
         
     image = Image.new('1', (width, height))
     draw = ImageDraw.Draw(image)
@@ -144,8 +143,8 @@ def display_battery_screen():
     padding = -2
     top = padding
     draw.text((12, top), "Battery Status",  font=title_font, fill=255)
-    draw.text((26, top + 18), str(percent) + "%",  font=battery_font, fill=255)
-    draw.text((26, top + 50), str(float("{0:.2f}".format(ert))) + "hrs",  font=title_font, fill=255)
+    draw.text((26, top + 18), '%s %%' % (str(percent)),  font=battery_font, fill=255)
+    draw.text((26, top + 50), '%s hrs' % (str(float("{0:.2f}".format(ert)))),  font=title_font, fill=255)
     # Display image.
     display.image(image)
     display.display()
@@ -166,7 +165,7 @@ def display_shutdown_screen():
     display.image(image)
     display.display()
 
-def core_button_interupt(channel):
+def core_button_interrupt(channel):
     core_button_status = 0
     start_time = time.time()
     
@@ -185,10 +184,9 @@ def core_button_interupt(channel):
     if core_button_status == 3:
         system('reboot')
             
-def nose_button_interupt(channel):
+def nose_button_interrupt(channel):
     global screen_counter
     global screen_sleep
-    global logging_enabled
     nose_button_status = 0
     
     start_time = time.time()
@@ -204,39 +202,51 @@ def nose_button_interupt(channel):
         nose_button_status = 2
  
     if nose_button_status == 1:
-        if screen_sleep < 31:
-            screen_counter = screen_counter + 1
-        if screen_counter > 4:
-            screen_counter = 1
-
-        screen_sleep = 0
-            
-        if screen_counter == 1:
-            display_battery_screen()
-        elif screen_counter == 2:
-            display_hotspot_screen()
-        elif screen_counter == 3:
-            display_logging_screen(logging_enabled)
-        elif screen_counter == 4:
-            display_shutdown_screen()
+        screen_counter,  screen_sleep = screen_selector(screen_counter,  screen_sleep)
             
     if nose_button_status == 2:
-        if screen_counter == 2 and screen_sleep < 31:
-            system('/usr/bin/autohotspot')
-            display_hotspot_screen()
-        if screen_counter == 3 and screen_sleep < 31:
-            sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            sensor_address = config_map['logger_socket']
+        nose_button_action(screen_counter,  screen_sleep)
+
+def screen_selector(screen,  screensaver):
+    if screensaver < 31:
+        screen = screen + 1
+    if screen > 4:
+        screen = 1
+
+    screensaver = 0
+            
+    if screen_counter == 1:
+        display_battery_screen()
+    elif screen_counter == 2:
+        display_hotspot_screen()
+    elif screen_counter == 3:
+        display_logging_screen(logging_status())
+    elif screen_counter == 4:
+        display_shutdown_screen()
+    
+    return(screen,  screensaver)
+
+def nose_button_action(screen,  screensaver):
+    if screen == 2 and screensaver < 31:
+        system('/usr/bin/autohotspot')
+        display_hotspot_screen()
         
-            try:
-                sensorsocket.connect(sensor_address)
-            except:
-                print("unable to connect to Gavin Logging Daemon")
+    if screen == 3 and screensaver < 31:
+        logging_enabled = logging_status()
+        sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sensor_address = data_hub_socket
         
+        try:
+            sensorsocket.connect(sensor_address)
+        except:
+            print("unable to connect to Gavin Logging Daemon")
+            connect_failed = 1
+                
+        if connect_failed == 0:
             try:
                 if logging_enabled == 0:
                     msg = '{"request":"logging start"}'
-                else:
+                elif logging_enabled == 1:
                     msg = '{"request":"logging stop"}'
                 sensorsocket.send(msg.encode())
             except socket.error:
@@ -250,11 +260,43 @@ def nose_button_interupt(channel):
             elif 'stopped' in data:
                 logging_enabled = 0
                 display_logging_screen(logging_enabled)
-        if screen_counter == 4 and screen_sleep < 31:
-            system('shutdown -H -h now')
+                    
+    if screen == 4 and screensaver < 31:
+        system('shutdown -H -h now')
 
-#GPIO.add_event_detect(core_button, GPIO.FALLING, callback=core_button_interupt, bouncetime=300)
-GPIO.add_event_detect(nose_button, GPIO.FALLING, callback=nose_button_interupt, bouncetime=300)
+def logging_status():
+        connect_failed = 0
+        sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sensor_address = data_hub_socket
+        try:
+            sensorsocket.connect(sensor_address)
+        except:
+            print("unable to connect to Gavin Data Hub daemon")
+            logging_enabled = -1
+            connect_failed == 1
+        
+        if connect_failed == 0:
+            try:
+                msg = '{"request":"logging status"}'
+                sensorsocket.send(msg.encode())
+                data = sensorsocket.recv(512).decode()
+                if 'running' in data:
+                    logging_enabled = 1
+                elif 'stopped' in data:
+                    logging_enabled = 0
+            except socket.error:
+                print("unable to request logging status")
+                logging_enabled = -1
+                
+        else:
+            logging_enabled = -1
+            
+        sensorsocket.close()
+        
+        return(logging_enabled)
+
+#GPIO.add_event_detect(core_button, GPIO.FALLING, callback=core_button_interrupt, bouncetime=300)
+GPIO.add_event_detect(nose_button, GPIO.FALLING, callback=nose_button_interrupt, bouncetime=300)
 
 display_clear()
 print(id,  version,  "ready")

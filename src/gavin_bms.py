@@ -10,7 +10,7 @@ import json
 import socket
 
 id = 'Gavin BMS Daemon'
-version = '1.0.4'
+version = '1.0.5'
 
 try:
     import Adafruit_ADS1x15
@@ -220,8 +220,11 @@ while True:
     else:
         if request != '':
             msg = json.dumps({'request': 'unknown'}, indent = 4, sort_keys = True, separators=(',', ': '))
-        
-    clientsocket.send(msg.encode('ascii'))
+    
+    try:
+        clientsocket.send(msg.encode('ascii'))
+    except:
+        socket.error
     clientsocket.close()
     
 clientsocket.send(msg.encode('ascii'))

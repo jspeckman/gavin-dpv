@@ -333,7 +333,10 @@ while True:
         if request != '':
             msg = json.dumps({'request': 'unknown'}, indent = 4, sort_keys = True, separators=(',', ': '))
         
-    clientsocket.send(msg.encode('ascii'))
+    try:
+        clientsocket.send(msg.encode('ascii'))
+    except:
+        socket.error
     clientsocket.close()
     
 clientsocket.send(msg.encode('ascii'))

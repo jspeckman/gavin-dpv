@@ -5,7 +5,7 @@ import json
 import socket
 
 id = 'Gavin GUI'
-version = '0.0.1'
+version = '1.0.0'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 port = 80
 
@@ -21,7 +21,7 @@ class gavin_gui(BaseHTTPRequestHandler):
         logging_status = self.logging_status()
         
         self._set_headers()
-        self.wfile.write(bytes("<html><body>", "utf-8"))
+        self.wfile.write(bytes('<html><head><meta http-equiv="refresh" content="60"><title>DPV Status</title></head><body>', "utf-8"))
         self.wfile.write(bytes('<br>',  "utf-8"))
         self.wfile.write(bytes('<center><p style="font-size:100px;"><strong>Battery</p></center>', "utf-8"))
         if battery_percent >= 75:

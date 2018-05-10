@@ -13,7 +13,7 @@ from threading import Thread
 import socket
 
 id = 'Gavin IMU Daemon'
-version = '1.0.5'
+version = '1.0.6'
 
 try:
     from Adafruit_BNO055 import BNO055
@@ -252,8 +252,11 @@ while True:
     else:
         if request != '':
             msg = json.dumps({'request': 'unknown'}, indent = 4, sort_keys = True, separators=(',', ': '))
-        
-    clientsocket.send(msg.encode('ascii'))
+    
+    try:
+        clientsocket.send(msg.encode('ascii'))
+    except:
+        socket.error
     clientsocket.close()
     
 clientsocket.send(msg.encode('ascii'))

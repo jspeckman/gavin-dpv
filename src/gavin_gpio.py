@@ -45,8 +45,8 @@ body_font = ImageFont.truetype('/opt/gavin/share/Minecraftia-Regular.ttf', 8)
 battery_font = ImageFont.truetype('/opt/gavin/share/Minecraftia-Regular.ttf', 26)
 
 # Track screen to display
-screen_counter = 0
-screen_sleep = 0
+screen = 0
+screensaver = 0
 
 def display_clear():
     display.clear()
@@ -185,8 +185,6 @@ def core_button_interrupt(channel):
         system('reboot')
             
 def nose_button_interrupt(channel):
-    global screen_counter
-    global screen_sleep
     nose_button_status = 0
     
     start_time = time.time()
@@ -202,31 +200,33 @@ def nose_button_interrupt(channel):
         nose_button_status = 2
  
     if nose_button_status == 1:
-        screen_counter,  screen_sleep = screen_selector(screen_counter,  screen_sleep)
+        screen_selector()
             
     if nose_button_status == 2:
-        nose_button_action(screen_counter,  screen_sleep)
+        nose_button_action()
 
-def screen_selector(screen,  screensaver):
+def screen_selector():
+    global screen
+    global screensaver
+    
     if screensaver < 31:
         screen = screen + 1
     if screen > 4:
         screen = 1
-
     screensaver = 0
             
-    if screen_counter == 1:
+    if screen == 1:
         display_battery_screen()
-    elif screen_counter == 2:
+    elif screen == 2:
         display_hotspot_screen()
-    elif screen_counter == 3:
+    elif screen == 3:
         display_logging_screen(logging_status())
-    elif screen_counter == 4:
+    elif screen == 4:
         display_shutdown_screen()
-    
-    return(screen,  screensaver)
 
-def nose_button_action(screen,  screensaver):
+def nose_button_action():
+    global screensaver
+    
     if screen == 2 and screensaver < 31:
         system('/usr/bin/autohotspot')
         display_hotspot_screen()
@@ -305,12 +305,12 @@ display_logo()
     
 try:
     while True:
-        if screen_sleep < 31:
-            screen_sleep += 1
-        if screen_sleep == 31:
+        if screensaver < 31:
+            screensaver += 1
+        if screensaver == 31:
             display_clear()
-            if screen_counter == 0:
-                screen_counter = 1
+            if screen == 0:
+                screen = 1
         time.sleep(1)
         
 except KeyboardInterrupt: # If CTRL+C is pressed, exit cleanly:

@@ -4,7 +4,7 @@ Hardware:
  1) CPU - raspberry pi zero w
  2) rtc - pcf8523 + battery
  3) imu - bno055
- 4) Pressure/Temp - bme280
+ 4) Pressure/Temp/humidity - bme280
  5) adc - ads1115
  6) voltage dividers on each battery
  7) current detection - acs770 (150 amp)
@@ -15,11 +15,12 @@ Hardware:
 Software:
 Raspian 8
 Python 3.6
-Adafruit_Python_GPIO
-Adafruit_Python_BME280
-Adafruit_Python_BNO055
-Adafruit_Python_ADS1x15
-Adafruit_Python_SSD1306
+    RPi.GPIO
+    Adafruit_Python_GPIO
+    Adafruit_Python_BME280
+    Adafruit_Python_BNO055
+    Adafruit_Python_ADS1x15
+    Adafruit_Python_SSD1306
 
 1) raspi-config
     a) enable ssh
@@ -28,18 +29,25 @@ Adafruit_Python_SSD1306
     d) memory split - set to 16
     e) config.txt
         1) dtoverlay=i2c-rtc,pcf8523
-        2) dtoverlay=pi3-disable-bt     (needed to enable serial port for bno055)
+        2) dtoverlay=pi3-disable-bt    (needed to enable serial port for bno055)
     f) apt-get remove fake-hwclock
     g) vi /lib/udev/hwclock-set
         1) comment out if, exit 0, fi lines
     h) set correct date/time, then run hwclock -w
     
-
 2) apt-get install python-pip python-dev python-smbus git
 3) Install python 3.6
-    a) Follow instructions at: https://gist.github.com/dschep/24aa61672a2092246eaca2824400d37f
+    a) Follow instructions at:
+        https://gist.github.com/dschep/24aa61672a2092246eaca2824400d37f
 4) Install python modules
-
+    pip3 install RPi.GPIO
+    pip3 install git+git://github.com/adafruit/Adafruit_Python_GPIO
+    pip3 install git+git://github.com/adafruit/Adafruit_Python_BME280
+    pip3 install git+git://github.com/adafruit/Adafruit_Python_BNO055
+    pip3 install git+git://github.com/adafruit/Adafruit_Python_ADS1x15
+    pip3 install git+git://github.com/adafruit/Adafruit_Python_SSD1306
 
 Todo:
 1) auto-mount thumbdrive for logs
+2) installer/upgrader/distro package
+

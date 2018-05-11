@@ -1,0 +1,52 @@
+Daemon API v1
+
+Each daemon that listens on a socket accept and return data in json format.
+
+Sockets:
+gavin_environment
+ - /tmp/gavin_environment.socket
+gavin_bms
+ - /tmp/gavin_bms.socket
+gavin_imu
+ - /tmp/gavin_imu.socket
+gavin_data_hub
+ - /tmp/gavin_data_hub.socket
+
+A manual connection can be made with:
+nc -U <socket name>
+
+
+JSON:
+Each deamon accept the following:
+{"request":"data"} - Get data from daemon
+{"request":"reload"} - Have daemon reload the config
+{"request":"shutdown"} - Terminate the daemon
+{"request":"version"} - Get name and version of the daemon
+
+Additional unique to each daemon:
+gavin_bms
+ - {"request":"battery info"} - Get battery info, ie: install date, mfg...
+
+gavin_imu
+ - {"request":"calibration status"} - Gets calibration status
+ - {"request":"calibration save"} - Gets calibration string
+ - {"request":"reset"} - Initiate reset of the IMU hardware
+
+gavin_data_hub
+ - {"request":"data environment"} - Get environment data only
+ - {"request":"data bms"} - Get bms data only
+ - {"request":"data imu"} - Get imu data only
+ - {"request":"logging start"} - Begin logging to file
+ - {"request":"logging stop"} - Stop logging to file
+ - {"request":"logging status"} - Get status of file logging
+
+
+Data Returned for each request:
+gavin_environment
+
+gavin_bms
+
+gavin_imu
+
+gavin_data_hub
+

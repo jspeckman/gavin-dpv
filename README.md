@@ -17,4 +17,9 @@ There are three sensor subsystems divided up as:
 Each subsystem has a daemon that returns data from the relevent sensors.
 Data is collected by the data hub daemon, which also handles logging.
 
+In addition there are two user interface daemons
+ - Push Buttons / Display
+ - Web Interface
+
+There is also a menu driven cli for configuring the software
 

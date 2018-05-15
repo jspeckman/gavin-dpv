@@ -224,7 +224,7 @@ def config_prefs():
         [ _("Units"),  set_units ], 
         [ _("Logging Interval"),  set_logging_interval ], 
         [ _("Logging Activation Method"),  set_logging_activation_method ], 
-        [ _("Logging Activation Trigger"),  set_logging_activation_trigger ], 
+        [ _("Logging Activation Trigger"),  set_logging_activation_trigger ],
     ]
 
     menu_map = {}

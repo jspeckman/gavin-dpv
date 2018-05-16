@@ -75,7 +75,10 @@ class gavin_gui(BaseHTTPRequestHandler):
             self.wfile.write(bytes("</body></html>", "utf-8"))
             
         elif download == 1:
-            row = 0
+            start_marker = end_marker = '-'
+            flight_logfile_list = get_logfile_list('flight_log')
+            battery_logfile_list = get_logfile_list('battery_log')
+
             self._set_headers()
             self.wfile.write(bytes('<html><head><title>DPV Logs</title></head><body>', "utf-8"))
             self.wfile.write(bytes('<center><p style="font-size:25px;"><strong>Log Managment</strong></p></center>', "utf-8"))
@@ -97,8 +100,48 @@ class gavin_gui(BaseHTTPRequestHandler):
             self.wfile.write(bytes('<td></td>',  "utf-8"))
             self.wfile.write(bytes('</tr>',  "utf-8"))
             
+            if flight_logfile_list == []:
+                self.wfile.write(bytes('<tr>',  "utf-8"))
+                self.wfile.write(bytes('<td></td>',  "utf-8"))
+                self.wfile.write(bytes('<td>No logs found</td>',  "utf-8"))
+                self.wfile.write(bytes('<td></td>',  "utf-8"))
+            else:
+                row = 0
+                for logfile in flight_logfile_list:
+                    self.wfile.write(bytes('<tr>',  "utf-8"))
+                    self.wfile.write(bytes('<td></td>',  "utf-8"))
+                    self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
+                    start = logfile.index(start_marker) + len(start_marker)
+                    end = logfile.index(end_marker,  start + 1)
+                    self.wfile.write(bytes('<td>%s%s%s%s%s</td>' % (logfile[start:end - 4],  '-',  logfile[start + 4:end - 2],  '-',  logfile[start + 6:end]),  "utf-8"))
+                    if row == 0:
+                        row = 1
+                    elif row == 1:
+                        row = 0
+                        
+            self.wfile.write(bytes('</table>',  "utf-8"))
+            self.wfile.write(bytes('<br>',  "utf-8"))
+            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
             
-            
+            if battery_logfile_list == []:
+                self.wfile.write(bytes('<tr>',  "utf-8"))
+                self.wfile.write(bytes('<td></td>',  "utf-8"))
+                self.wfile.write(bytes('<td>No battery logs found</td>',  "utf-8"))
+                self.wfile.write(bytes('<td></td>',  "utf-8"))
+            else:
+                row = 0
+                for logfile in battery_logfile_list:
+                    self.wfile.write(bytes('<tr>',  "utf-8"))
+                    self.wfile.write(bytes('<td></td>',  "utf-8"))
+                    self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
+                    start = logfile.index(start_marker) + len(start_marker)
+                    end = logfile.index(end_marker,  start + 1)
+                    self.wfile.write(bytes('<td>%s%s%s%s%s</td>' % (logfile[start:end - 4],  '-',  logfile[start + 4:end - 2],  '-',  logfile[start + 6:end]),  "utf-8"))
+                    if row == 0:
+                        row = 1
+                    elif row == 1:
+                        row = 0
+                    
             self.wfile.write(bytes('</table>',  "utf-8"))
             self.wfile.write(bytes('</form>',  "utf-8"))
             self.wfile.write(bytes("</body></html>", "utf-8"))

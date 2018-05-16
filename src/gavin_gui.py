@@ -3,6 +3,8 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import socket
+import os.path
+import fnmatch
 
 id = 'Gavin GUI'
 version = '1.0.0'
@@ -215,7 +217,20 @@ class gavin_gui(BaseHTTPRequestHandler):
         sensorsocket.close()
         
         return(logging_enabled)
-        
+
+def get_logfile_list(logfile_type):
+    if logfile_type == 'flight_log':
+        logfile_name = "flight_log-"
+    elif logfile_type == 'battery_log':
+        logfile_name = "battery_log-"
+    logfile_list = []
+    
+    for input_filename in sorted(os.listdir(log_dir)):
+        if fnmatch.fnmatch(input_filename, logfile_name + "*"):
+            logfile_list.append(input_filename)
+
+    return(logfile_list)
+    
 def run(server_class=HTTPServer, handler_class=gavin_gui, port=80):
     server_address = ('', port)
     httpd = server_class(server_address, handler_class)

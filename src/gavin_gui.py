@@ -21,8 +21,8 @@ class gavin_gui(BaseHTTPRequestHandler):
     def do_GET(self,  download = 0):
         if download == 0:
             mobile = 1
-            battery_percent,  battery_ert = self.get_battery_percent()
-            logging_status = self.logging_status()
+            battery_percent,  battery_ert = get_battery_percent()
+            logging_status = get_logging_status()
             if 'Mobile' in self.headers['User-Agent']:
                 mobile = 1
             else:
@@ -156,9 +156,9 @@ class gavin_gui(BaseHTTPRequestHandler):
         if 'delete_logs=True' in str(post_data):
             delete_logs = 1
         if 'logging=start' in str(post_data):
-            self.start_stop_logging(1)
+            start_stop_logging(1)
         elif 'logging=stop' in str(post_data):
-            self.start_stop_logging(0)
+            start_stop_logging(0)
         if 'download=start' in str(post_data):
             self.do_GET(download = 1)
         else:
@@ -167,98 +167,98 @@ class gavin_gui(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
         
-    def get_battery_percent(self):
-        connect_failed = 0
-        sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sensor_address = data_hub_socket
+def get_battery_percent(self):
+    connect_failed = 0
+    sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sensor_address = data_hub_socket
+    try:
+        sensorsocket.connect(sensor_address)
+    except:
+        print("unable to connect to Gavin Data Hub daemon")
+        percent = -1
+        ert = -1
+        connect_failed = 1
+    if connect_failed == 0:
         try:
-            sensorsocket.connect(sensor_address)
-        except:
-            print("unable to connect to Gavin Data Hub daemon")
-            percent = -1
-            ert = -1
-            connect_failed = 1
-        if connect_failed == 0:
+            msg = '{"request":"data bms"}'
+            sensorsocket.send(msg.encode())
             try:
-                msg = '{"request":"data bms"}'
-                sensorsocket.send(msg.encode())
-                try:
-                    data = json.loads(sensorsocket.recv(512).decode())
-                except ValueError:
-                    sensorsocket.close()
-                    return
-                if len(data) > 0:
-                    if data['percent']:
-                        percent = int(data['percent'])
-                    else:
-                        percent = -1
-                    if data['ert']:
-                        ert = int(data['ert'])
-                    else:
-                        ert = -1
-            except socket.error:
-                print("unable to request from",  id)
-                percent = -1
-                ert = -1
-        else:
-            percent = -1
-            ert = -1
-        
-        sensorsocket.close()
-        return(percent,  ert)
-
-    def start_stop_logging(self,  logging_enable):
-        connect_failed = 0
-        sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sensor_address = data_hub_socket
-        try:
-            sensorsocket.connect(sensor_address)
-        except:
-            print("unable to connect to Gavin Data Hub daemon")
-            connect_failed = 1
-        if connect_failed == 0:
-            try:
-                if logging_enable == 1:
-                    msg = '{"request":"logging start"}'
+                data = json.loads(sensorsocket.recv(512).decode())
+            except ValueError:
+                sensorsocket.close()
+                return
+            if len(data) > 0:
+                if data['percent']:
+                    percent = int(data['percent'])
                 else:
-                    msg = '{"request":"logging stop"}'
-                sensorsocket.send(msg.encode())
-                sensorsocket.recv(512).decode()
-            except socket.error:
-                print("unable to request logging activation")
+                    percent = -1
+                if data['ert']:
+                    ert = int(data['ert'])
+                else:
+                    ert = -1
+        except socket.error:
+            print("unable to request from",  id)
+            percent = -1
+            ert = -1
+    else:
+        percent = -1
+        ert = -1
         
-        sensorsocket.close()
-        
-    def logging_status(self):
-        connect_failed = 0
-        sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sensor_address = data_hub_socket
+    sensorsocket.close()
+    return(percent,  ert)
+
+def start_stop_logging(self,  logging_enable):
+    connect_failed = 0
+    sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sensor_address = data_hub_socket
+    try:
+        sensorsocket.connect(sensor_address)
+    except:
+        print("unable to connect to Gavin Data Hub daemon")
+        connect_failed = 1
+    if connect_failed == 0:
         try:
-            sensorsocket.connect(sensor_address)
-        except:
-            print("unable to connect to Gavin Data Hub daemon")
-            logging_enabled = -1
-            connect_failed == 1
+            if logging_enable == 1:
+                msg = '{"request":"logging start"}'
+            else:
+                msg = '{"request":"logging stop"}'
+            sensorsocket.send(msg.encode())
+            sensorsocket.recv(512).decode()
+        except socket.error:
+            print("unable to request logging activation")
         
-        if connect_failed == 0:
-            try:
-                msg = '{"request":"logging status"}'
-                sensorsocket.send(msg.encode())
-                data = sensorsocket.recv(512).decode()
-                if 'running' in data:
-                    logging_enabled = 1
-                elif 'stopped' in data:
-                    logging_enabled = 0
-            except socket.error:
-                print("unable to request logging status")
-                logging_enabled = -1
+    sensorsocket.close()
+        
+def get_logging_status(self):
+    connect_failed = 0
+    sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sensor_address = data_hub_socket
+    try:
+        sensorsocket.connect(sensor_address)
+    except:
+        print("unable to connect to Gavin Data Hub daemon")
+        logging_enabled = -1
+        connect_failed == 1
+        
+    if connect_failed == 0:
+        try:
+            msg = '{"request":"logging status"}'
+            sensorsocket.send(msg.encode())
+            data = sensorsocket.recv(512).decode()
+            if 'running' in data:
+                logging_enabled = 1
+            elif 'stopped' in data:
+                logging_enabled = 0
+        except socket.error:
+            print("unable to request logging status")
+            logging_enabled = -1
                 
-        else:
-            logging_enabled = -1
+    else:
+        logging_enabled = -1
             
-        sensorsocket.close()
+    sensorsocket.close()
         
-        return(logging_enabled)
+    return(logging_enabled)
 
 def get_logfile_list(logfile_type):
     logfile_list = []

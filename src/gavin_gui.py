@@ -74,6 +74,7 @@ class gavin_gui(BaseHTTPRequestHandler):
             self.wfile.write(bytes("</body></html>", "utf-8"))
             
         elif download == 1:
+            row = 0
             self._set_headers()
             self.wfile.write(bytes('<html><head><title>DPV Logs</title></head><body>', "utf-8"))
             self.wfile.write(bytes('<center><p style="font-size:25px;"><strong>Log Managment</strong></p></center>', "utf-8"))

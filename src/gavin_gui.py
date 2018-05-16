@@ -7,6 +7,7 @@ import socket
 id = 'Gavin GUI'
 version = '1.0.0'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
+log_dir = '/opt/gavin/log'
 port = 8080
 
 
@@ -75,15 +76,40 @@ class gavin_gui(BaseHTTPRequestHandler):
         elif download == 1:
             self._set_headers()
             self.wfile.write(bytes('<html><head><title>DPV Logs</title></head><body>', "utf-8"))
+            self.wfile.write(bytes('<center><p style="font-size:25px;"><strong>Log Managment</strong></p></center>', "utf-8"))
             self.wfile.write(bytes('<br>',  "utf-8"))
+            self.wfile.write(bytes('<center><p><form action="/" method="post">',  "utf-8"))
+            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
+            self.wfile.write(bytes('<tr>',  "utf-8"))
+            self.wfile.write(bytes('<td><input type="checkbox" name="delete_logs" value="True">Delete log files after download</td>',  "utf-8"))
+            self.wfile.write(bytes('<td></td>',  "utf-8"))
+            self.wfile.write(bytes('<td></td>',  "utf-8"))
+            self.wfile.write(bytes('</tr>',  "utf-8"))
+            self.wfile.write(bytes('</table>',  "utf-8"))
+            
+            self.wfile.write(bytes('<br>',  "utf-8"))
+            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
+            self.wfile.write(bytes('<tr>',  "utf-8"))
+            self.wfile.write(bytes('<td><input type="checkbox" name="select_all_logs" value="True">Select All</td>',  "utf-8"))
+            self.wfile.write(bytes('<td></td>',  "utf-8"))
+            self.wfile.write(bytes('<td></td>',  "utf-8"))
+            self.wfile.write(bytes('</tr>',  "utf-8"))
+            
+            
+            
+            self.wfile.write(bytes('</table>',  "utf-8"))
+            self.wfile.write(bytes('</form>',  "utf-8"))
             self.wfile.write(bytes("</body></html>", "utf-8"))
         
     def do_HEAD(self):
         self._set_headers()
         
     def do_POST(self):
+        delete_logs = 0
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
         post_data = self.rfile.read(content_length) # <--- Gets the data itself
+        if 'delete_logs=True' in str(post_data):
+            delete_logs = 1
         if 'logging=start' in str(post_data):
             self.start_stop_logging(1)
         elif 'logging=stop' in str(post_data):

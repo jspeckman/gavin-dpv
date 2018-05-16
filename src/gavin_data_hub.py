@@ -5,7 +5,6 @@
 
 import os.path
 from os import unlink
-import fnmatch
 import time
 import datetime
 import threading
@@ -15,7 +14,7 @@ import socket
 from datetime import date
 
 id = 'Gavin Data Hub Daemon'
-version = '1.0.9'
+version = '1.0.10'
 
 DEV_MODE = 0
 
@@ -102,7 +101,7 @@ def get_logfile_name(log_file):
     logfile_list = []
     
     for input_filename in sorted(os.listdir(config_map['log_dir'])):
-        if fnmatch.fnmatch(input_filename, logfile_name + "*"):
+        if input_filename.startswith(logfile_name):
             logfile_list.append(input_filename)
 
     return('%s%s.csv' % (logfile_name, str(len(logfile_list) + 1)))

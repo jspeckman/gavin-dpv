@@ -181,14 +181,14 @@ class gavin_gui(BaseHTTPRequestHandler):
     def do_POST(self):
         delete_logs = 0
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
-        post_data = self.rfile.read(content_length) # <--- Gets the data itself
-        if 'delete_logs=True' in str(post_data):
+        post_data = self.rfile.read(content_length).decode('utf-8').split('&') # <--- Gets the data itself
+        if 'delete_logs=True' in post_data:
             delete_logs = 1
-        if 'logging=start' in str(post_data):
+        if 'logging=start' in post_data:
             start_stop_logging(1)
-        elif 'logging=stop' in str(post_data):
+        elif 'logging=stop' in post_data:
             start_stop_logging(0)
-        if 'download=start' in str(post_data):
+        if 'download=start' in post_data:
             self.do_GET(download = 1)
         else:
             self.do_GET()

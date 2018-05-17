@@ -47,7 +47,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                 if logging_status == 0:
                     self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="start"><button style="font-size:60px;height:200px;width:500px" type="submit">Start Logging</button></form></p></center>', "utf-8"))
                 elif logging_status == 1:
-                    self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:60px;height:200px;width:500px" type="submit">Stop Logging</button></p></center>', "utf-8"))
+                    self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:60px;height:200px;width:500px" type="submit">Stop Logging</button></form></p></center>', "utf-8"))
                 elif logging_status == -1:
                     self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
 
@@ -67,7 +67,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                 if logging_status == 0:
                     self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="start"><button style="font-size:25px;height:70px;width:200px" type="submit">Start Logging</button></form></p></center>', "utf-8"))
                 elif logging_status == 1:
-                    self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:25px;height:70px;width:200px" type="submit">Stop Logging</button></p></center>', "utf-8"))
+                    self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:25px;height:70px;width:200px" type="submit">Stop Logging</button></form></p></center>', "utf-8"))
                 elif logging_status == -1:
                     self.wfile.write(bytes('<center><p style="font-size:25px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
                 self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download" value="start"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
@@ -75,31 +75,46 @@ class gavin_gui(BaseHTTPRequestHandler):
             self.wfile.write(bytes("</body></html>", "utf-8"))
             
         elif download == 1:
-            start_marker = end_marker = '-'
+            start_marker = '-'
+            end_marker = '.'
             flight_logfile_list = get_logfile_list('flight_log')
             battery_logfile_list = get_logfile_list('battery_log')
 
             self._set_headers()
             self.wfile.write(bytes('<html><head><title>DPV Logs</title></head><body>', "utf-8"))
+            
+            self.wfile.write(bytes('<script language="JavaScript">', "utf-8"))
+            self.wfile.write(bytes('function select_all(source) {', "utf-8"))
+            self.wfile.write(bytes('checkboxes = document.getElementsByName(\'selected_logs\');', "utf-8"))
+            self.wfile.write(bytes('for(var i=0, n=checkboxes.length;i<n;i++) {', "utf-8"))
+            self.wfile.write(bytes('checkboxes[i].checked = source.checked;', "utf-8"))
+            self.wfile.write(bytes('}', "utf-8"))
+            self.wfile.write(bytes('}', "utf-8"))
+            self.wfile.write(bytes('</script>', "utf-8"))
+            
             self.wfile.write(bytes('<center><p style="font-size:25px;"><strong>Log Managment</strong></p></center>', "utf-8"))
             self.wfile.write(bytes('<br>',  "utf-8"))
+            
             self.wfile.write(bytes('<center><p><form action="/" method="post">',  "utf-8"))
+            
             self.wfile.write(bytes('<table width=75%>',  "utf-8"))
             self.wfile.write(bytes('<tr>',  "utf-8"))
-            self.wfile.write(bytes('<td><input type="checkbox" name="delete_logs" value="True">Delete log files after download</td>',  "utf-8"))
+            self.wfile.write(bytes('<td><button onclick="location.reload(history.back())">Back</button></td>',  "utf-8"))
             self.wfile.write(bytes('<td></td>',  "utf-8"))
-            self.wfile.write(bytes('<td></td>',  "utf-8"))
+            self.wfile.write(bytes('<td align=right><input type="checkbox" name="delete_logs" value="True">Delete log files after download</td>',  "utf-8"))
             self.wfile.write(bytes('</tr>',  "utf-8"))
             self.wfile.write(bytes('</table>',  "utf-8"))
             
             self.wfile.write(bytes('<br>',  "utf-8"))
             self.wfile.write(bytes('<table width=75%>',  "utf-8"))
             self.wfile.write(bytes('<tr>',  "utf-8"))
-            self.wfile.write(bytes('<td><input type="checkbox" name="select_all_logs" value="True">Select All</td>',  "utf-8"))
+            self.wfile.write(bytes('<td><input type="checkbox" onClick="select_all(this)">Select all</td>',  "utf-8"))
             self.wfile.write(bytes('<td></td>',  "utf-8"))
             self.wfile.write(bytes('<td></td>',  "utf-8"))
             self.wfile.write(bytes('</tr>',  "utf-8"))
+            self.wfile.write(bytes('</table>',  "utf-8"))
             
+            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
             if flight_logfile_list == []:
                 self.wfile.write(bytes('<tr>',  "utf-8"))
                 self.wfile.write(bytes('<td></td>',  "utf-8"))
@@ -108,12 +123,15 @@ class gavin_gui(BaseHTTPRequestHandler):
             else:
                 row = 0
                 for logfile in flight_logfile_list:
-                    self.wfile.write(bytes('<tr>',  "utf-8"))
-                    self.wfile.write(bytes('<td></td>',  "utf-8"))
+                    if row == 0:
+                        self.wfile.write(bytes('<tr>',  "utf-8"))
+                    elif row == 1:
+                        self.wfile.write(bytes('<tr bgcolor=#99e6ff>',  "utf-8"))
+                    self.wfile.write(bytes('<td><input type="checkbox" name="selected_logs" value="%s"></td>' % (logfile),  "utf-8"))
                     self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
                     start = logfile.index(start_marker) + len(start_marker)
                     end = logfile.index(end_marker,  start + 1)
-                    self.wfile.write(bytes('<td>%s%s%s%s%s</td>' % (logfile[start:end - 4],  '-',  logfile[start + 4:end - 2],  '-',  logfile[start + 6:end]),  "utf-8"))
+                    self.wfile.write(bytes('<td align=center>%s</td>' % (logfile[start:end]),  "utf-8"))
                     if row == 0:
                         row = 1
                     elif row == 1:
@@ -131,18 +149,29 @@ class gavin_gui(BaseHTTPRequestHandler):
             else:
                 row = 0
                 for logfile in battery_logfile_list:
-                    self.wfile.write(bytes('<tr>',  "utf-8"))
-                    self.wfile.write(bytes('<td></td>',  "utf-8"))
+                    if row == 0:
+                        self.wfile.write(bytes('<tr>',  "utf-8"))
+                    elif row == 1:
+                        self.wfile.write(bytes('<tr bgcolor=#99e6ff>',  "utf-8"))
+                    self.wfile.write(bytes('<td><input type="checkbox" name="selected_logs" value="%s"></td>' % (logfile),  "utf-8"))
                     self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
                     start = logfile.index(start_marker) + len(start_marker)
                     end = logfile.index(end_marker,  start + 1)
-                    self.wfile.write(bytes('<td>%s%s%s%s%s</td>' % (logfile[start:end - 4],  '-',  logfile[start + 4:end - 2],  '-',  logfile[start + 6:end]),  "utf-8"))
+                    self.wfile.write(bytes('<td align=center>%s</td>' % (logfile[start:end]),  "utf-8"))
                     if row == 0:
                         row = 1
                     elif row == 1:
                         row = 0
                     
             self.wfile.write(bytes('</table>',  "utf-8"))
+            
+            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
+            self.wfile.write(bytes('<tr>',  "utf-8"))
+            self.wfile.write(bytes('<td><button type="submit">Download</button></td>',  "utf-8"))
+            self.wfile.write(bytes('<td></td>',  "utf-8"))
+            self.wfile.write(bytes('<td></td>',  "utf-8"))
+            self.wfile.write(bytes('</table>',  "utf-8"))
+            
             self.wfile.write(bytes('</form>',  "utf-8"))
             self.wfile.write(bytes("</body></html>", "utf-8"))
         
@@ -167,7 +196,7 @@ class gavin_gui(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         return
         
-def get_battery_percent(self):
+def get_battery_percent():
     connect_failed = 0
     sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     sensor_address = data_hub_socket
@@ -207,7 +236,7 @@ def get_battery_percent(self):
     sensorsocket.close()
     return(percent,  ert)
 
-def start_stop_logging(self,  logging_enable):
+def start_stop_logging(logging_enable):
     connect_failed = 0
     sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     sensor_address = data_hub_socket
@@ -229,7 +258,7 @@ def start_stop_logging(self,  logging_enable):
         
     sensorsocket.close()
         
-def get_logging_status(self):
+def get_logging_status():
     connect_failed = 0
     sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     sensor_address = data_hub_socket
@@ -263,7 +292,7 @@ def get_logging_status(self):
 def get_logfile_list(logfile_type):
     logfile_list = []
     
-    for input_filename in sorted(os.listdir(log_dir)):
+    for input_filename in sorted(os.listdir(log_dir),  reverse=True):
         if input_filename.startswith(logfile_type):
             logfile_list.append(input_filename)
 

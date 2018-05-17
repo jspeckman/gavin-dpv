@@ -6,6 +6,7 @@ import socket
 import os.path
 from os import unlink
 from shutil import copyfileobj
+import zipfile
 
 id = 'Gavin GUI'
 version = '1.0.0'
@@ -178,15 +179,32 @@ class gavin_gui(BaseHTTPRequestHandler):
             self.wfile.write(bytes("</body></html>", "utf-8"))
             
         elif download_page == 2:
-            for logfile in logfile_list:
-                with open('%s/%s' % (log_dir,  logfile)) as log:
-                    self.send_response(200)
-                    self.send_header("Content-Type",  'application/octet-stream')
-                    self.send_header("Content-Disposition",  'attachment; filename="{}"'.format(os.path.basename('%s/%s' % (log_dir,  logfile))))
-                    fs = os.fstat(log.fileno())
-                    self.send_header("Content-Length",  str(fs.st_size))
-                    self.end_headers()
-                    copyfileobj(log,  self.wfile)
+            if len(logfile_list) > 1:
+                tmp_zip = '/tmp/dpv-logs.zip'
+                zipped_logs = zipfile.ZipFile(tmp_zip,  'w')
+                for logfile in logfile_list:
+                    zipped_logs.write('%s/%s' % (log_dir,  logfile),  logfile)
+                zipped_logs.close()
+                zipf = open(tmp_zip,  'rb')
+                fs = os.fstat(zipf.fileno())
+                self.send_response(200)
+                self.send_header("Content-Type",  'application/octet-stream')
+                self.send_header("Content-Disposition",  'attachment; filename="{}"'.format(os.path.basename(tmp_zip)))
+                self.send_header("Content-Length",  str(fs.st_size))
+                self.end_headers()
+                copyfileobj(zipf,  self.wfile)
+                unlink(tmp_zip)
+                
+            elif len(logfile_list) == 1:
+                for logfile in logfile_list:
+                    with open('%s/%s' % (log_dir,  logfile)) as log:
+                        self.send_response(200)
+                        self.send_header("Content-Type",  'application/octet-stream')
+                        self.send_header("Content-Disposition",  'attachment; filename="{}"'.format(os.path.basename('%s/%s' % (log_dir,  logfile))))
+                        fs = os.fstat(log.fileno())
+                        self.send_header("Content-Length",  str(fs.st_size))
+                        self.end_headers()
+                        copyfileobj(log,  self.wfile)
         
     def do_HEAD(self):
         self._set_headers()

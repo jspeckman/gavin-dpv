@@ -4,6 +4,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import socket
 import os.path
+from os import unlink
+from shutil import copyfileobj
 
 id = 'Gavin GUI'
 version = '1.0.0'
@@ -18,8 +20,8 @@ class gavin_gui(BaseHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
 
-    def do_GET(self,  download = 0):
-        if download == 0:
+    def do_GET(self,  download_page = 0,  logfile_list = []):
+        if download_page == 0:
             mobile = 1
             battery_percent,  battery_ert = get_battery_percent()
             logging_status = get_logging_status()
@@ -70,11 +72,11 @@ class gavin_gui(BaseHTTPRequestHandler):
                     self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:25px;height:70px;width:200px" type="submit">Stop Logging</button></form></p></center>', "utf-8"))
                 elif logging_status == -1:
                     self.wfile.write(bytes('<center><p style="font-size:25px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
-                self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download" value="start"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
+                self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download_page" value="true"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
             
             self.wfile.write(bytes("</body></html>", "utf-8"))
             
-        elif download == 1:
+        elif download_page == 1:
             start_marker = '-'
             end_marker = '.'
             flight_logfile_list = get_logfile_list('flight_log')
@@ -101,7 +103,7 @@ class gavin_gui(BaseHTTPRequestHandler):
             self.wfile.write(bytes('<tr>',  "utf-8"))
             self.wfile.write(bytes('<td><button onclick="location.reload(history.back())">Back</button></td>',  "utf-8"))
             self.wfile.write(bytes('<td></td>',  "utf-8"))
-            self.wfile.write(bytes('<td align=right><input type="checkbox" name="delete_logs" value="True">Delete log files after download</td>',  "utf-8"))
+            self.wfile.write(bytes('<td align=right><input type="checkbox" name="delete_logs" value="true">Delete log files after download</td>',  "utf-8"))
             self.wfile.write(bytes('</tr>',  "utf-8"))
             self.wfile.write(bytes('</table>',  "utf-8"))
             
@@ -167,31 +169,65 @@ class gavin_gui(BaseHTTPRequestHandler):
             
             self.wfile.write(bytes('<table width=75%>',  "utf-8"))
             self.wfile.write(bytes('<tr>',  "utf-8"))
-            self.wfile.write(bytes('<td><button type="submit">Download</button></td>',  "utf-8"))
+            self.wfile.write(bytes('<td><button type="submit" name="download_logs" value="true">Download</button></td>',  "utf-8"))
             self.wfile.write(bytes('<td></td>',  "utf-8"))
-            self.wfile.write(bytes('<td></td>',  "utf-8"))
+            self.wfile.write(bytes('<td align=right><button type="submit" name="delete_logs_only" value="true">Delete Only</button></td>',  "utf-8"))
             self.wfile.write(bytes('</table>',  "utf-8"))
             
             self.wfile.write(bytes('</form>',  "utf-8"))
             self.wfile.write(bytes("</body></html>", "utf-8"))
+            
+        elif download_page == 2:
+            for logfile in logfile_list:
+                with open('%s/%s' % (log_dir,  logfile)) as log:
+                    self.send_response(200)
+                    self.send_header("Content-Type",  'application/octet-stream')
+                    self.send_header("Content-Disposition",  'attachment; filename="{}"'.format(os.path.basename('%s/%s' % (log_dir,  logfile))))
+                    fs = os.fstat(log.fileno())
+                    self.send_header("Content-Length",  str(fs.st_size))
+                    self.end_headers()
+                    copyfileobj(log,  self.wfile)
         
     def do_HEAD(self):
         self._set_headers()
         
     def do_POST(self):
+        download_page = 0
+        download_logs = 0
         delete_logs = 0
+        delete_selected_logs = 0
+        logfile_list = []
+        
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
         post_data = self.rfile.read(content_length).decode('utf-8').split('&') # <--- Gets the data itself
-        if 'delete_logs=True' in post_data:
-            delete_logs = 1
-        if 'logging=start' in post_data:
-            start_stop_logging(1)
-        elif 'logging=stop' in post_data:
-            start_stop_logging(0)
-        if 'download=start' in post_data:
-            self.do_GET(download = 1)
-        else:
+        
+        for post_variable in post_data:
+            if 'delete_logs=true' in post_variable:
+                delete_logs = 1
+            if 'delete_logs_only=true' in post_variable:
+                delete_selected_logs = 1
+            if 'selected_logs' in post_variable:
+                logfile_list.append(post_variable[14:])
+            if 'logging=start' in post_variable:
+                start_stop_logging(1)
+            if 'logging=stop' in post_variable:
+                start_stop_logging(0)
+            if 'download_page=true' in post_variable:
+                download_page = 1
+            if 'download_logs=true' in post_variable:
+                download_logs = 1
+
+        if delete_selected_logs == 1:
+            delete_logfiles(logfile_list)
+        elif delete_selected_logs == 0 and delete_logs == 1 and download_logs == 1:
+            self.do_GET(download_page = 2)
+            delete_logfiles(logfile_list)
+        elif delete_selected_logs == 0 and delete_logs == 0 and download_logs == 1:
+            self.do_GET(download_page = 2,  logfile_list = logfile_list)
+        if download_page == 0:
             self.do_GET()
+        elif download_page == 1:
+            self.do_GET(download_page = 1)
 
     def log_message(self, format, *args):
         return
@@ -297,6 +333,13 @@ def get_logfile_list(logfile_type):
             logfile_list.append(input_filename)
 
     return(logfile_list)
+
+def delete_logfiles(logfile_list):
+    for logfile in logfile_list:
+        try:
+            unlink('%s/%s' % (log_dir, logfile))
+        except:
+            raise
     
 def run(server_class=HTTPServer, handler_class=gavin_gui, port=80):
     server_address = ('', port)

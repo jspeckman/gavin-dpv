@@ -12,7 +12,7 @@ id = 'Gavin GUI'
 version = '1.0.0'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 log_dir = '/opt/gavin/log'
-port = 8080
+port = 80
 
 
 class gavin_gui(BaseHTTPRequestHandler):
@@ -94,6 +94,17 @@ class gavin_gui(BaseHTTPRequestHandler):
             self.wfile.write(bytes('}', "utf-8"))
             self.wfile.write(bytes('}', "utf-8"))
             self.wfile.write(bytes('</script>', "utf-8"))
+            self.wfile.write(bytes('<style>', "utf-8"))
+            self.wfile.write(bytes('table#log {', "utf-8"))
+            self.wfile.write(bytes('border: 1px solid black;', "utf-8"))
+            self.wfile.write(bytes('width: 100%;', "utf-8"))
+            self.wfile.write(bytes('}', "utf-8"))
+            self.wfile.write(bytes('div.log {', "utf-8"))
+            self.wfile.write(bytes('overflow-y: scroll;', "utf-8"))
+            self.wfile.write(bytes('height: 40%;', "utf-8"))
+            self.wfile.write(bytes('width: 75%;', "utf-8"))
+            self.wfile.write(bytes('}', "utf-8"))
+            self.wfile.write(bytes('</style>', "utf-8"))
             
             self.wfile.write(bytes('<center><p style="font-size:25px;"><strong>Log Managment</strong></p></center>', "utf-8"))
             self.wfile.write(bytes('<br>',  "utf-8"))
@@ -117,7 +128,8 @@ class gavin_gui(BaseHTTPRequestHandler):
             self.wfile.write(bytes('</tr>',  "utf-8"))
             self.wfile.write(bytes('</table>',  "utf-8"))
             
-            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
+            self.wfile.write(bytes('<div class="log">',  "utf-8"))
+            self.wfile.write(bytes('<table id="log">',  "utf-8"))
             if flight_logfile_list == []:
                 self.wfile.write(bytes('<tr>',  "utf-8"))
                 self.wfile.write(bytes('<td></td>',  "utf-8"))
@@ -126,9 +138,9 @@ class gavin_gui(BaseHTTPRequestHandler):
             else:
                 row = 0
                 for logfile in flight_logfile_list:
-                    if row == 0:
+                    if row == 1:
                         self.wfile.write(bytes('<tr>',  "utf-8"))
-                    elif row == 1:
+                    elif row == 0:
                         self.wfile.write(bytes('<tr bgcolor=#99e6ff>',  "utf-8"))
                     self.wfile.write(bytes('<td><input type="checkbox" name="selected_logs" value="%s"></td>' % (logfile),  "utf-8"))
                     self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
@@ -141,8 +153,10 @@ class gavin_gui(BaseHTTPRequestHandler):
                         row = 0
                         
             self.wfile.write(bytes('</table>',  "utf-8"))
+            self.wfile.write(bytes('</div>',  "utf-8"))
             self.wfile.write(bytes('<br>',  "utf-8"))
-            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
+            self.wfile.write(bytes('<div class="log">',  "utf-8"))
+            self.wfile.write(bytes('<table id="log">',  "utf-8"))
             
             if battery_logfile_list == []:
                 self.wfile.write(bytes('<tr>',  "utf-8"))
@@ -152,9 +166,9 @@ class gavin_gui(BaseHTTPRequestHandler):
             else:
                 row = 0
                 for logfile in battery_logfile_list:
-                    if row == 0:
+                    if row == 1:
                         self.wfile.write(bytes('<tr>',  "utf-8"))
-                    elif row == 1:
+                    elif row == 0:
                         self.wfile.write(bytes('<tr bgcolor=#99e6ff>',  "utf-8"))
                     self.wfile.write(bytes('<td><input type="checkbox" name="selected_logs" value="%s"></td>' % (logfile),  "utf-8"))
                     self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
@@ -167,6 +181,8 @@ class gavin_gui(BaseHTTPRequestHandler):
                         row = 0
                     
             self.wfile.write(bytes('</table>',  "utf-8"))
+            self.wfile.write(bytes('</div>',  "utf-8"))
+            self.wfile.write(bytes('<br>',  "utf-8"))
             
             self.wfile.write(bytes('<table width=75%>',  "utf-8"))
             self.wfile.write(bytes('<tr>',  "utf-8"))

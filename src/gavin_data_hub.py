@@ -14,7 +14,7 @@ import socket
 from datetime import date
 
 id = 'Gavin Data Hub Daemon'
-version = '1.0.10'
+version = '1.0.11'
 
 DEV_MODE = 0
 
@@ -60,6 +60,7 @@ config_map['uuid'] = 2135
 config_map['sample_rate'] = 1
 config_map['flight_log'] = 'inactive'
 config_map['shutdown_threads'] = False
+config_map['startup'] = 1
 
 # Socket values
 serversocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -172,12 +173,14 @@ def read_from_sensor_daemon(sensor_socket):
 def data_aggregation_thread():
     counter = 0
     while True:
-        if config_map['flight_log'] == 'active':
+        if config_map['flight_log'] == 'active' or config_map['startup'] == 1:
             with sensors_changed:
                 read_from_sensor_daemon(config_map['env_socket'])
                 read_from_sensor_daemon(config_map['bms_socket'])
                 read_from_sensor_daemon(config_map['imu_socket'])
                 sensors_changed.notifyAll()
+                if config_map['startup'] == 1:
+                    config_map['startup'] = 0
             time.sleep(1/2)
         if config_map['flight_log'] == 'inactive':
             with sensors_changed:

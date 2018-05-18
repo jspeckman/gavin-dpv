@@ -12,8 +12,32 @@ id = 'Gavin GUI'
 version = '1.0.0'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 log_dir = '/opt/gavin/log'
-port = 80
+port = 8080
 
+# setup config map
+config_map = {}
+
+# Config file location
+config_map['config_dir'] = "/opt/gavin/etc"
+config_map['config_file'] = "config.json"
+
+config_map['clocksync'] = 'Both'
+
+# Function to read or reread config file
+def read_config():
+    if os.path.isfile('%s/%s' % (config_map['config_dir'], config_map['config_file'])):
+        with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'r') as configfile:
+            try:
+                config = json.load(configfile)
+                if 'units' in config:
+                    config_map['clocksync'] = config['clocksync']
+            except ValueError:
+                print("Corrupt config file, loading defaults.")
+    else:
+        print("Config file not found, loading defaults.")
+        
+# Get values from config file
+read_config()
 
 class gavin_gui(BaseHTTPRequestHandler):
     def _set_headers(self):
@@ -34,6 +58,7 @@ class gavin_gui(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(bytes('<html><head><meta http-equiv="refresh" content="60"><title>DPV Status</title></head><body>', "utf-8"))
             self.wfile.write(bytes('<br>',  "utf-8"))
+            
             if mobile == 1:
                 self.wfile.write(bytes('<center><p style="font-size:100px;"><strong>Battery</p></center>', "utf-8"))
                 if battery_percent >= 75:
@@ -234,7 +259,7 @@ class gavin_gui(BaseHTTPRequestHandler):
         
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
         post_data = self.rfile.read(content_length).decode('utf-8').split('&') # <--- Gets the data itself
-        
+        print(post_data)
         for post_variable in post_data:
             if 'delete_logs=true' in post_variable:
                 delete_logs = 1

@@ -29,7 +29,7 @@ def read_config():
         with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'r') as configfile:
             try:
                 config = json.load(configfile)
-                if 'units' in config:
+                if 'clocksync' in config:
                     config_map['clocksync'] = config['clocksync']
             except ValueError:
                 print("Corrupt config file, loading defaults.")
@@ -59,6 +59,14 @@ class gavin_gui(BaseHTTPRequestHandler):
             self.wfile.write(bytes('<html><head><meta http-equiv="refresh" content="60"><title>DPV Status</title></head><body>', "utf-8"))
             self.wfile.write(bytes('<br>',  "utf-8"))
             
+            if config_map['clocksync'] != 'Internet':
+                self.wfile.write(bytes('<script>',  "utf-8"))
+                self.wfile.write(bytes('function syncTime(){',  "utf-8"))
+                self.wfile.write(bytes('document.synctime.browser_time.value = Date();',  "utf-8"))
+                self.wfile.write(bytes('document.forms["synctime"].submit();',  "utf-8"))
+                self.wfile.write(bytes('}',  "utf-8"))
+                self.wfile.write(bytes('</script>',  "utf-8"))
+            
             if mobile == 1:
                 self.wfile.write(bytes('<center><p style="font-size:100px;"><strong>Battery</p></center>', "utf-8"))
                 if battery_percent >= 75:
@@ -78,7 +86,9 @@ class gavin_gui(BaseHTTPRequestHandler):
                     self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:60px;height:200px;width:500px" type="submit">Stop Logging</button></form></p></center>', "utf-8"))
                 elif logging_status == -1:
                     self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
-
+                if config_map['clocksync'] != 'Internet':
+                    self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:60px;height:200px;width:500px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
+                
             elif mobile == 0:
                 self.wfile.write(bytes('<center><p style="font-size:75px;"><strong>Battery</strong></p></center>', "utf-8"))
                 if battery_percent >= 75:
@@ -99,7 +109,9 @@ class gavin_gui(BaseHTTPRequestHandler):
                 elif logging_status == -1:
                     self.wfile.write(bytes('<center><p style="font-size:25px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
                 self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download_page" value="true"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
-            
+                if config_map['clocksync'] != 'Internet':
+                    self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:60px;height:200px;width:500px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
+
             self.wfile.write(bytes("</body></html>", "utf-8"))
             
         elif download_page == 1:
@@ -261,6 +273,8 @@ class gavin_gui(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length).decode('utf-8').split('&') # <--- Gets the data itself
         print(post_data)
         for post_variable in post_data:
+            if 'browser_time' in post_variable:
+                print('date -s "%s"' %(post_variable[0:11] + post_variable[16:25] + post_variable[35:38] + post_variable[10:15]))
             if 'delete_logs=true' in post_variable:
                 delete_logs = 1
             if 'delete_logs_only=true' in post_variable:

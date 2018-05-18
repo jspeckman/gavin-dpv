@@ -15,7 +15,7 @@ import uuid
 _ = lambda s: s
 
 id = 'Gavin CLI'
-version = '1.0.0'
+version = '1.0.1'
 
 # setup maps
 config_map = {}
@@ -23,8 +23,9 @@ battery_map = {}
 IMU_AXIS_MAP = {}
 
 # Config file location
-config_map['config_dir'] = "/opt/gavin/etc"
-config_map['config_file'] = "config.json"
+config_map['config_dir'] = '/opt/gavin/etc'
+config_map['config_file'] = 'config.json'
+config_map['data_hub_socket'] = '/tmp/gavin_data_hub.socket'
 
 # Default config values
 config_map['first_run'] = "YES"
@@ -37,6 +38,7 @@ config_map['bno_update_hz'] = 10
 config_map['sample_rate'] = 1
 config_map['activate_method'] = "Pressure"
 config_map['activate_trigger'] = 900
+config_map['clocksync'] = "Both"
 
 # Default battery values
 battery_map['config_file'] = "battery_config.json"
@@ -187,12 +189,56 @@ def get_uuid():
     return(config_map['uuid'])
 
 def get_battery_voltage():
-    return("placeholder")
+    connect_failed = 0
+    v1 = ''
+    v2 = ''
+    sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sensor_address = config_map['data_hub_socket']
+    try:
+        sensorsocket.connect(sensor_address)
+    except:
+        print("unable to connect to Gavin Data Hub daemon")
+        vt = -1
+        connect_failed = 1
+    if connect_failed == 0:
+        try:
+            msg = '{"request":"data bms"}'
+            sensorsocket.send(msg.encode())
+            try:
+                data = json.loads(sensorsocket.recv(512).decode())
+            except ValueError:
+                sensorsocket.close()
+                return
+            if len(data) > 0:
+                if data['voltage']:
+                    vt = data['voltage']
+                else:
+                    vt = -1
+                if data['v1']:
+                    v1 = data['v1']
+                if data['v2']:
+                    v2 = data['v2']
+                
+        except socket.error:
+            print("unable to request from",  id)
+            vt = -1
+    else:
+        vt = -1
+        
+    sensorsocket.close()
+    
+    if not v1:
+        v1 = -1
+    if not v2:
+        v2 = -1
+        
+    return(vt,  v1,  v2)
     
 def config_date_time():
     menu = [
         [ _("Set Date"),  set_date ], 
         [ _("Set Time"),  set_time ], 
+        [ _("Configure Auto-set"),  set_auto_dt ], 
     ]
 
     menu_map = {}
@@ -394,7 +440,17 @@ def config_wifi():
     print("placeholder")
 
 def config_first_run():
-    print("placeholder")
+    while True:
+        ret = input(_("Confirm reset to defaults **This will wipe all configurations** (y/n): "))
+        if ret.lower().startswith("y"):
+            try:
+                os.unlink('%s/%s' % (config_map['config_dir'],  config_map['config_file']))
+            except OSError:
+                if os.path.exists('%s/%s' % (config_map['config_dir'],  config_map['config_file'])):
+                    raise
+            return False
+        if ret.lower().startswith("n"):
+            return False
 
 def system_shell():
     return os.system("/bin/su -l root")
@@ -437,6 +493,45 @@ def set_time():
         os.system(cmd)
         return True
 
+def set_auto_dt():
+    menu = [
+        [ _("Browser") ], 
+        [ _("Internet") ],
+        [ _("Both") ], 
+    ]
+    
+    menu_map = {}
+    menu_max = 0
+    
+    for item in menu:
+        menu_max = menu_max + 1
+        menu_map[menu_max] = item
+        
+    while True:
+        print()
+        print(_("DPV clock may drift when not connected to the internet or shutdown for extended periods"))
+        print(_("Select clock sync source (currently"), config_map['clocksync'] ,  ")")
+        print()
+        
+        for index in menu_map:
+            print("%d) %s" % (index,  menu_map[index][0]))
+        
+        print()
+        _input = input(_("Enter an option from 1-%d (enter q to quit): ") % (menu_max))
+        if _input.isdigit() and int(_input) in range(1,  menu_max + 1):
+            ch = int(_input)
+            if ch in menu_map:
+                config_map['clocksync'] = menu_map[ch][0]
+                write_config()
+                if config_map['clocksync'] == 'Browser':
+                    cmd = 'systemctl stop ntpd'
+                    cmd = 'systemctl disable ntpd'
+                    cmd = 'systemctl mask ntpd'
+                return True
+        elif _input.lower().startswith("q"):
+            return False
+        continue
+    
 def set_dpv_name():
     while True:
         hostname = input(_("Enter new DPV name or c to cancel: "))
@@ -879,7 +974,11 @@ def main_menu():
             print(_("DPV Name:"),  get_dpv_name())
             print(_("UUID:"),  get_uuid())
             print(_("Opperating in"))
-            print(_("Current battery voltage:"),  get_battery_voltage())
+            vt,  v1,  v2 = get_battery_voltage()
+            if v2 == -1:
+                print(_("Current battery voltage: (Total: %s, Battery 1: %s)") % (vt,  v1))
+            else:
+                print(_("Current battery voltage: (Total: %s, Battery 1: %s, Battery 2: %s)") % (vt,  v1,  v2))
             print()
         except:
             pass

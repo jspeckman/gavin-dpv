@@ -132,7 +132,7 @@ def write_config():
     with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'w') as configfile:
         config_json = json.dumps({'first_run': config_map['first_run'], 'uuid': config_map['uuid'], 'myname': config_map['myname'],
                                   'calibration': {'imu': config_map['imu_calibration']}, 'axis_map': {'x': IMU_AXIS_MAP['x'], 'x_sign': IMU_AXIS_MAP['x_sign'], 'y': IMU_AXIS_MAP['y'], 'y_sign': IMU_AXIS_MAP['y_sign'], 'z': IMU_AXIS_MAP['z'], 'z_sign': IMU_AXIS_MAP['z_sign']},
-                                  'motor': {'watts': config_map['motor_watts']}, 'units': config_map['units'], 'bno_update_hz': config_map['bno_update_hz'],
+                                  'motor': {'watts': config_map['motor_watts']}, 'units': config_map['units'], 'clocksync': config_map['clocksync'], 'bno_update_hz': config_map['bno_update_hz'],
                                   'sample_rate': config_map['sample_rate'], 'activate': {'method': config_map['activate_method'], 'trigger': config_map['activate_trigger']}}, indent = 4, sort_keys = True, separators=(',', ': '))
         configfile.write(config_json)
 

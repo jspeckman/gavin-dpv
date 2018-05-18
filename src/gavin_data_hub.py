@@ -172,6 +172,12 @@ def read_from_sensor_daemon(sensor_socket):
 # Data aggregation thread
 def data_aggregation_thread():
     counter = 0
+    delay_counter = -1
+    if config_map['activate_method'] == 'Powerup':
+        config_map['flight_log'] = 'active'
+    elif config_map['activate_method'] == 'Delay':
+        delay_counter = config_map['activate_trigger'] * 2
+        
     while True:
         if config_map['flight_log'] == 'active' or config_map['startup'] == 1:
             with sensors_changed:
@@ -185,12 +191,21 @@ def data_aggregation_thread():
         if config_map['flight_log'] == 'inactive':
             with sensors_changed:
                 read_from_sensor_daemon(config_map['env_socket'])
+                
                 if counter >= 120:
                     read_from_sensor_daemon(config_map['bms_socket'])
                     counter = 0
                 sensors_changed.notifyAll()
             counter += 1
+            
+            if delay_counter != -1:
+                delay_counter -= 1
+            elif delay_counter == 1:
+                config_map['flight_log'] = 'active'
+                delay_counter = -1
+                
             time.sleep(1/2)
+            
         if config_map['shutdown_threads'] is True:
             break
     
@@ -266,7 +281,7 @@ battery_log_thread = Thread(target = battery_logging_thread)
 data_agg_thread.start()
 
 print(id,  version,  "listening on",  socket_file)
-
+    
 # Main loop
 while True:
     msg = ''

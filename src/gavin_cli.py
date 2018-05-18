@@ -599,7 +599,8 @@ def set_logging_activation_method():
     menu = [
         [ _("Manual") ], 
         [ _("Pressure") ],
-        [ _("Delay")], 
+        [ _("Delay")],
+        [ _("Powerup")], 
     ]
     
     menu_map = {}

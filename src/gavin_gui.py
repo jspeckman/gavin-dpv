@@ -5,6 +5,7 @@ import json
 import socket
 import os.path
 from os import unlink
+from os import system
 from shutil import copyfileobj
 import zipfile
 
@@ -79,7 +80,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                     self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get battery status</strong></p></center>', "utf-8"))
                 self.wfile.write(bytes('<center><p style="font-size:50px;">Estimated Runtime:</p></center>', "utf-8"))
                 self.wfile.write(bytes('<center><p style="font-size:40px;">%d Minutes</p></center>' % (battery_ert), "utf-8"))
-                self.wfile.write(bytes('<br><br><br><br><br><br><br><br><br><br><br><br>',  "utf-8"))
+                self.wfile.write(bytes('<br><br><br><br><br><br><br><br><br><br>',  "utf-8"))
                 if logging_status == 0:
                     self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="start"><button style="font-size:60px;height:200px;width:500px" type="submit">Start Logging</button></form></p></center>', "utf-8"))
                 elif logging_status == 1:
@@ -110,7 +111,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                     self.wfile.write(bytes('<center><p style="font-size:25px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
                 self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download_page" value="true"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
                 if config_map['clocksync'] != 'Internet':
-                    self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:60px;height:200px;width:500px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
+                    self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:25px;height:70px;width:200px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
 
             self.wfile.write(bytes("</body></html>", "utf-8"))
             
@@ -271,10 +272,10 @@ class gavin_gui(BaseHTTPRequestHandler):
         
         content_length = int(self.headers['Content-Length']) # <--- Gets the size of data
         post_data = self.rfile.read(content_length).decode('utf-8').split('&') # <--- Gets the data itself
-        print(post_data)
+        
         for post_variable in post_data:
             if 'browser_time' in post_variable:
-                print('date -s "%s"' %(post_variable[0:11] + post_variable[16:25] + post_variable[35:38] + post_variable[10:15]))
+                system('date -s "%s %s %s %s:%s:%s %s %s"' %(post_variable[13:16],  post_variable[17:20],  post_variable[21:23],  post_variable[29:31],  post_variable[34:36],  post_variable[39:41],  post_variable[54:57],  post_variable[24:28]))
             if 'delete_logs=true' in post_variable:
                 delete_logs = 1
             if 'delete_logs_only=true' in post_variable:

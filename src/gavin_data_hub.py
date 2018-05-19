@@ -60,6 +60,7 @@ config_map['uuid'] = 2135
 config_map['sample_rate'] = 1
 config_map['flight_log'] = 'inactive'
 config_map['shutdown_threads'] = False
+config_map['activate_method'] = 'Manual'
 config_map['startup'] = 1
 
 # Socket values
@@ -85,10 +86,10 @@ def read_config():
                     config_map['uuid'] = config['uuid']
                 if 'sample_rate' in config:
                     config_map['sample_rate'] = config['sample_rate']
-                if 'activate_method' in config:
-                    config_map['activate_method'] = config['activate_method']
-                if 'activate_trigger' in config:
-                    config_map['activate_trigger'] = config['activate_trigger']
+                if 'method' in config['activate']:
+                    config_map['activate_method'] = config['activate']['method']
+                if 'trigger' in config['activate']:
+                    config_map['activate_trigger'] = config['activate']['trigger']
             except ValueError:
                 print("Corrupt config file, loading defaults.")
     else:

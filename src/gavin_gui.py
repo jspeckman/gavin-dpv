@@ -47,218 +47,221 @@ class gavin_gui(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self,  download_page = 0,  logfile_list = []):
-        if download_page == 0:
-            mobile = 1
-            battery_percent,  battery_ert = get_battery_percent()
-            logging_status = get_logging_status()
-            if 'Mobile' in self.headers['User-Agent']:
+        if self.path == '/json':
+            print('yes')
+        else:
+            if download_page == 0:
                 mobile = 1
-            else:
-                mobile = 0
-            
-            self._set_headers()
-            self.wfile.write(bytes('<html><head><meta http-equiv="refresh" content="60"><title>DPV Status</title></head><body>', "utf-8"))
-            self.wfile.write(bytes('<br>',  "utf-8"))
-            
-            if config_map['clocksync'] != 'Internet':
-                self.wfile.write(bytes('<script>',  "utf-8"))
-                self.wfile.write(bytes('function syncTime(){',  "utf-8"))
-                self.wfile.write(bytes('document.synctime.browser_time.value = Date();',  "utf-8"))
-                self.wfile.write(bytes('document.forms["synctime"].submit();',  "utf-8"))
-                self.wfile.write(bytes('}',  "utf-8"))
-                self.wfile.write(bytes('</script>',  "utf-8"))
-            
-            if mobile == 1:
-                self.wfile.write(bytes('<center><p style="font-size:100px;"><strong>Battery</p></center>', "utf-8"))
-                if battery_percent >= 75:
-                    self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:150px;color:green"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
-                elif 63 <= battery_percent < 75:
-                    self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:150px;color:orange"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
-                elif 0 <= battery_percent < 63:
-                    self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:150px;color:red"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
-                elif battery_percent == -1:
-                    self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get battery status</strong></p></center>', "utf-8"))
-                self.wfile.write(bytes('<center><p style="font-size:50px;">Estimated Runtime:</p></center>', "utf-8"))
-                self.wfile.write(bytes('<center><p style="font-size:40px;">%d Minutes</p></center>' % (battery_ert), "utf-8"))
-                self.wfile.write(bytes('<br><br><br><br><br><br><br><br><br><br>',  "utf-8"))
-                if logging_status == 0:
-                    self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="start"><button style="font-size:60px;height:200px;width:500px" type="submit">Start Logging</button></form></p></center>', "utf-8"))
-                elif logging_status == 1:
-                    self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:60px;height:200px;width:500px" type="submit">Stop Logging</button></form></p></center>', "utf-8"))
-                elif logging_status == -1:
-                    self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
-                if config_map['clocksync'] != 'Internet':
-                    self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:60px;height:200px;width:500px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
+                battery_percent,  battery_ert = get_battery_percent()
+                logging_status = get_logging_status()
+                if 'Mobile' in self.headers['User-Agent']:
+                    mobile = 1
+                else:
+                    mobile = 0
                 
-            elif mobile == 0:
-                self.wfile.write(bytes('<center><p style="font-size:75px;"><strong>Battery</strong></p></center>', "utf-8"))
-                if battery_percent >= 75:
-                    self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;color:green"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
-                elif 63 <= battery_percent < 75:
-                    self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;color:orange"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
-                elif 0 <= battery_percent < 63:
-                    self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;color:red"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
-                elif battery_percent == -1:
-                    self.wfile.write(bytes('<center><p style="font-size:25px;color:red"><strong>Unable to get battery status</strong></p></center>', "utf-8"))
-                self.wfile.write(bytes('<center><p style="font-size:25px;">Estimated Runtime:</p></center>', "utf-8"))
-                self.wfile.write(bytes('<center><p style="font-size:20px;">%d Minutes</p></center>' % (battery_ert), "utf-8"))
-                self.wfile.write(bytes('<br><br><br>',  "utf-8"))
-                if logging_status == 0:
-                    self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="start"><button style="font-size:25px;height:70px;width:200px" type="submit">Start Logging</button></form></p></center>', "utf-8"))
-                elif logging_status == 1:
-                    self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:25px;height:70px;width:200px" type="submit">Stop Logging</button></form></p></center>', "utf-8"))
-                elif logging_status == -1:
-                    self.wfile.write(bytes('<center><p style="font-size:25px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
-                self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download_page" value="true"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
+                self._set_headers()
+                self.wfile.write(bytes('<html><head><meta http-equiv="refresh" content="60"><title>DPV Status</title></head><body>', "utf-8"))
+                self.wfile.write(bytes('<br>',  "utf-8"))
+                
                 if config_map['clocksync'] != 'Internet':
-                    self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:25px;height:70px;width:200px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
-
-            self.wfile.write(bytes("</body></html>", "utf-8"))
-            
-        elif download_page == 1:
-            start_marker = '-'
-            end_marker = '.'
-            flight_logfile_list = get_logfile_list('flight_log')
-            battery_logfile_list = get_logfile_list('battery_log')
-
-            self._set_headers()
-            self.wfile.write(bytes('<html><head><title>DPV Logs</title></head><body>', "utf-8"))
-            
-            self.wfile.write(bytes('<script language="JavaScript">', "utf-8"))
-            self.wfile.write(bytes('function select_all(source) {', "utf-8"))
-            self.wfile.write(bytes('checkboxes = document.getElementsByName(\'selected_logs\');', "utf-8"))
-            self.wfile.write(bytes('for(var i=0, n=checkboxes.length;i<n;i++) {', "utf-8"))
-            self.wfile.write(bytes('checkboxes[i].checked = source.checked;', "utf-8"))
-            self.wfile.write(bytes('}', "utf-8"))
-            self.wfile.write(bytes('}', "utf-8"))
-            self.wfile.write(bytes('</script>', "utf-8"))
-            self.wfile.write(bytes('<style>', "utf-8"))
-            self.wfile.write(bytes('table#log {', "utf-8"))
-            self.wfile.write(bytes('border: 1px solid black;', "utf-8"))
-            self.wfile.write(bytes('width: 100%;', "utf-8"))
-            self.wfile.write(bytes('}', "utf-8"))
-            self.wfile.write(bytes('div.log {', "utf-8"))
-            self.wfile.write(bytes('overflow-y: scroll;', "utf-8"))
-            self.wfile.write(bytes('height: 40%;', "utf-8"))
-            self.wfile.write(bytes('width: 75%;', "utf-8"))
-            self.wfile.write(bytes('}', "utf-8"))
-            self.wfile.write(bytes('</style>', "utf-8"))
-            
-            self.wfile.write(bytes('<center><p style="font-size:25px;"><strong>Log Managment</strong></p></center>', "utf-8"))
-            self.wfile.write(bytes('<br>',  "utf-8"))
-            
-            self.wfile.write(bytes('<center><p><form action="/" method="post">',  "utf-8"))
-            
-            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
-            self.wfile.write(bytes('<tr>',  "utf-8"))
-            self.wfile.write(bytes('<td><button onclick="location.reload(history.back())">Back</button></td>',  "utf-8"))
-            self.wfile.write(bytes('<td></td>',  "utf-8"))
-            self.wfile.write(bytes('<td align=right><input type="checkbox" name="delete_logs" value="true">Delete log files after download</td>',  "utf-8"))
-            self.wfile.write(bytes('</tr>',  "utf-8"))
-            self.wfile.write(bytes('</table>',  "utf-8"))
-            
-            self.wfile.write(bytes('<br>',  "utf-8"))
-            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
-            self.wfile.write(bytes('<tr>',  "utf-8"))
-            self.wfile.write(bytes('<td><input type="checkbox" onClick="select_all(this)">Select all</td>',  "utf-8"))
-            self.wfile.write(bytes('<td></td>',  "utf-8"))
-            self.wfile.write(bytes('<td></td>',  "utf-8"))
-            self.wfile.write(bytes('</tr>',  "utf-8"))
-            self.wfile.write(bytes('</table>',  "utf-8"))
-            
-            self.wfile.write(bytes('<div class="log">',  "utf-8"))
-            self.wfile.write(bytes('<table id="log">',  "utf-8"))
-            if flight_logfile_list == []:
-                self.wfile.write(bytes('<tr>',  "utf-8"))
-                self.wfile.write(bytes('<td></td>',  "utf-8"))
-                self.wfile.write(bytes('<td>No logs found</td>',  "utf-8"))
-                self.wfile.write(bytes('<td></td>',  "utf-8"))
-            else:
-                row = 0
-                for logfile in flight_logfile_list:
-                    if row == 1:
-                        self.wfile.write(bytes('<tr>',  "utf-8"))
-                    elif row == 0:
-                        self.wfile.write(bytes('<tr bgcolor=#99e6ff>',  "utf-8"))
-                    self.wfile.write(bytes('<td><input type="checkbox" name="selected_logs" value="%s"></td>' % (logfile),  "utf-8"))
-                    self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
-                    start = logfile.index(start_marker) + len(start_marker)
-                    end = logfile.index(end_marker,  start + 1)
-                    self.wfile.write(bytes('<td align=center>%s</td>' % (logfile[start:end]),  "utf-8"))
-                    if row == 0:
-                        row = 1
-                    elif row == 1:
-                        row = 0
-                        
-            self.wfile.write(bytes('</table>',  "utf-8"))
-            self.wfile.write(bytes('</div>',  "utf-8"))
-            self.wfile.write(bytes('<br>',  "utf-8"))
-            self.wfile.write(bytes('<div class="log">',  "utf-8"))
-            self.wfile.write(bytes('<table id="log">',  "utf-8"))
-            
-            if battery_logfile_list == []:
-                self.wfile.write(bytes('<tr>',  "utf-8"))
-                self.wfile.write(bytes('<td></td>',  "utf-8"))
-                self.wfile.write(bytes('<td>No battery logs found</td>',  "utf-8"))
-                self.wfile.write(bytes('<td></td>',  "utf-8"))
-            else:
-                row = 0
-                for logfile in battery_logfile_list:
-                    if row == 1:
-                        self.wfile.write(bytes('<tr>',  "utf-8"))
-                    elif row == 0:
-                        self.wfile.write(bytes('<tr bgcolor=#99e6ff>',  "utf-8"))
-                    self.wfile.write(bytes('<td><input type="checkbox" name="selected_logs" value="%s"></td>' % (logfile),  "utf-8"))
-                    self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
-                    start = logfile.index(start_marker) + len(start_marker)
-                    end = logfile.index(end_marker,  start + 1)
-                    self.wfile.write(bytes('<td align=center>%s</td>' % (logfile[start:end]),  "utf-8"))
-                    if row == 0:
-                        row = 1
-                    elif row == 1:
-                        row = 0
+                    self.wfile.write(bytes('<script>',  "utf-8"))
+                    self.wfile.write(bytes('function syncTime(){',  "utf-8"))
+                    self.wfile.write(bytes('document.synctime.browser_time.value = Date();',  "utf-8"))
+                    self.wfile.write(bytes('document.forms["synctime"].submit();',  "utf-8"))
+                    self.wfile.write(bytes('}',  "utf-8"))
+                    self.wfile.write(bytes('</script>',  "utf-8"))
+                
+                if mobile == 1:
+                    self.wfile.write(bytes('<center><p style="font-size:100px;"><strong>Battery</p></center>', "utf-8"))
+                    if battery_percent >= 75:
+                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:150px;color:green"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+                    elif 63 <= battery_percent < 75:
+                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:150px;color:orange"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+                    elif 0 <= battery_percent < 63:
+                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:150px;color:red"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+                    elif battery_percent == -1:
+                        self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get battery status</strong></p></center>', "utf-8"))
+                    self.wfile.write(bytes('<center><p style="font-size:50px;">Estimated Runtime:</p></center>', "utf-8"))
+                    self.wfile.write(bytes('<center><p style="font-size:40px;">%d Minutes</p></center>' % (battery_ert), "utf-8"))
+                    self.wfile.write(bytes('<br><br><br><br><br><br><br><br><br><br>',  "utf-8"))
+                    if logging_status == 0:
+                        self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="start"><button style="font-size:60px;height:200px;width:500px" type="submit">Start Logging</button></form></p></center>', "utf-8"))
+                    elif logging_status == 1:
+                        self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:60px;height:200px;width:500px" type="submit">Stop Logging</button></form></p></center>', "utf-8"))
+                    elif logging_status == -1:
+                        self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
+                    if config_map['clocksync'] != 'Internet':
+                        self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:60px;height:200px;width:500px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
                     
-            self.wfile.write(bytes('</table>',  "utf-8"))
-            self.wfile.write(bytes('</div>',  "utf-8"))
-            self.wfile.write(bytes('<br>',  "utf-8"))
-            
-            self.wfile.write(bytes('<table width=75%>',  "utf-8"))
-            self.wfile.write(bytes('<tr>',  "utf-8"))
-            self.wfile.write(bytes('<td><button type="submit" name="download_logs" value="true">Download</button></td>',  "utf-8"))
-            self.wfile.write(bytes('<td></td>',  "utf-8"))
-            self.wfile.write(bytes('<td align=right><button type="submit" name="delete_logs_only" value="true">Delete Only</button></td>',  "utf-8"))
-            self.wfile.write(bytes('</table>',  "utf-8"))
-            
-            self.wfile.write(bytes('</form>',  "utf-8"))
-            self.wfile.write(bytes("</body></html>", "utf-8"))
-            
-        elif download_page == 2:
-            if len(logfile_list) > 1:
-                tmp_zip = '/tmp/dpv-logs.zip'
-                zipped_logs = zipfile.ZipFile(tmp_zip,  'w')
-                for logfile in logfile_list:
-                    zipped_logs.write('%s/%s' % (log_dir,  logfile),  logfile)
-                zipped_logs.close()
-                zipf = open(tmp_zip,  'rb')
-                fs = os.fstat(zipf.fileno())
-                self.send_response(200)
-                self.send_header("Content-Type",  'application/octet-stream')
-                self.send_header("Content-Disposition",  'attachment; filename="{}"'.format(os.path.basename(tmp_zip)))
-                self.send_header("Content-Length",  str(fs.st_size))
-                self.end_headers()
-                copyfileobj(zipf,  self.wfile)
-                unlink(tmp_zip)
+                elif mobile == 0:
+                    self.wfile.write(bytes('<center><p style="font-size:75px;"><strong>Battery</strong></p></center>', "utf-8"))
+                    if battery_percent >= 75:
+                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;color:green"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+                    elif 63 <= battery_percent < 75:
+                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;color:orange"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+                    elif 0 <= battery_percent < 63:
+                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;color:red"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+                    elif battery_percent == -1:
+                        self.wfile.write(bytes('<center><p style="font-size:25px;color:red"><strong>Unable to get battery status</strong></p></center>', "utf-8"))
+                    self.wfile.write(bytes('<center><p style="font-size:25px;">Estimated Runtime:</p></center>', "utf-8"))
+                    self.wfile.write(bytes('<center><p style="font-size:20px;">%d Minutes</p></center>' % (battery_ert), "utf-8"))
+                    self.wfile.write(bytes('<br><br><br>',  "utf-8"))
+                    if logging_status == 0:
+                        self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="start"><button style="font-size:25px;height:70px;width:200px" type="submit">Start Logging</button></form></p></center>', "utf-8"))
+                    elif logging_status == 1:
+                        self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="logging" value="stop"><button style="font-size:25px;height:70px;width:200px" type="submit">Stop Logging</button></form></p></center>', "utf-8"))
+                    elif logging_status == -1:
+                        self.wfile.write(bytes('<center><p style="font-size:25px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
+                    self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download_page" value="true"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
+                    if config_map['clocksync'] != 'Internet':
+                        self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:25px;height:70px;width:200px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
+    
+                self.wfile.write(bytes("</body></html>", "utf-8"))
                 
-            elif len(logfile_list) == 1:
-                for logfile in logfile_list:
-                    with open('%s/%s' % (log_dir,  logfile)) as log:
-                        self.send_response(200)
-                        self.send_header("Content-Type",  'application/octet-stream')
-                        self.send_header("Content-Disposition",  'attachment; filename="{}"'.format(os.path.basename('%s/%s' % (log_dir,  logfile))))
-                        fs = os.fstat(log.fileno())
-                        self.send_header("Content-Length",  str(fs.st_size))
-                        self.end_headers()
-                        copyfileobj(log,  self.wfile)
+            elif download_page == 1:
+                start_marker = '-'
+                end_marker = '.'
+                flight_logfile_list = get_logfile_list('flight_log')
+                battery_logfile_list = get_logfile_list('battery_log')
+    
+                self._set_headers()
+                self.wfile.write(bytes('<html><head><title>DPV Logs</title></head><body>', "utf-8"))
+                
+                self.wfile.write(bytes('<script language="JavaScript">', "utf-8"))
+                self.wfile.write(bytes('function select_all(source) {', "utf-8"))
+                self.wfile.write(bytes('checkboxes = document.getElementsByName(\'selected_logs\');', "utf-8"))
+                self.wfile.write(bytes('for(var i=0, n=checkboxes.length;i<n;i++) {', "utf-8"))
+                self.wfile.write(bytes('checkboxes[i].checked = source.checked;', "utf-8"))
+                self.wfile.write(bytes('}', "utf-8"))
+                self.wfile.write(bytes('}', "utf-8"))
+                self.wfile.write(bytes('</script>', "utf-8"))
+                self.wfile.write(bytes('<style>', "utf-8"))
+                self.wfile.write(bytes('table#log {', "utf-8"))
+                self.wfile.write(bytes('border: 1px solid black;', "utf-8"))
+                self.wfile.write(bytes('width: 100%;', "utf-8"))
+                self.wfile.write(bytes('}', "utf-8"))
+                self.wfile.write(bytes('div.log {', "utf-8"))
+                self.wfile.write(bytes('overflow-y: scroll;', "utf-8"))
+                self.wfile.write(bytes('height: 40%;', "utf-8"))
+                self.wfile.write(bytes('width: 75%;', "utf-8"))
+                self.wfile.write(bytes('}', "utf-8"))
+                self.wfile.write(bytes('</style>', "utf-8"))
+                
+                self.wfile.write(bytes('<center><p style="font-size:25px;"><strong>Log Managment</strong></p></center>', "utf-8"))
+                self.wfile.write(bytes('<br>',  "utf-8"))
+                
+                self.wfile.write(bytes('<center><p><form action="/" method="post">',  "utf-8"))
+                
+                self.wfile.write(bytes('<table width=75%>',  "utf-8"))
+                self.wfile.write(bytes('<tr>',  "utf-8"))
+                self.wfile.write(bytes('<td><button onclick="location.reload(history.back())">Back</button></td>',  "utf-8"))
+                self.wfile.write(bytes('<td></td>',  "utf-8"))
+                self.wfile.write(bytes('<td align=right><input type="checkbox" name="delete_logs" value="true">Delete log files after download</td>',  "utf-8"))
+                self.wfile.write(bytes('</tr>',  "utf-8"))
+                self.wfile.write(bytes('</table>',  "utf-8"))
+                
+                self.wfile.write(bytes('<br>',  "utf-8"))
+                self.wfile.write(bytes('<table width=75%>',  "utf-8"))
+                self.wfile.write(bytes('<tr>',  "utf-8"))
+                self.wfile.write(bytes('<td><input type="checkbox" onClick="select_all(this)">Select all</td>',  "utf-8"))
+                self.wfile.write(bytes('<td></td>',  "utf-8"))
+                self.wfile.write(bytes('<td></td>',  "utf-8"))
+                self.wfile.write(bytes('</tr>',  "utf-8"))
+                self.wfile.write(bytes('</table>',  "utf-8"))
+                
+                self.wfile.write(bytes('<div class="log">',  "utf-8"))
+                self.wfile.write(bytes('<table id="log">',  "utf-8"))
+                if flight_logfile_list == []:
+                    self.wfile.write(bytes('<tr>',  "utf-8"))
+                    self.wfile.write(bytes('<td></td>',  "utf-8"))
+                    self.wfile.write(bytes('<td>No logs found</td>',  "utf-8"))
+                    self.wfile.write(bytes('<td></td>',  "utf-8"))
+                else:
+                    row = 0
+                    for logfile in flight_logfile_list:
+                        if row == 1:
+                            self.wfile.write(bytes('<tr>',  "utf-8"))
+                        elif row == 0:
+                            self.wfile.write(bytes('<tr bgcolor=#99e6ff>',  "utf-8"))
+                        self.wfile.write(bytes('<td><input type="checkbox" name="selected_logs" value="%s"></td>' % (logfile),  "utf-8"))
+                        self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
+                        start = logfile.index(start_marker) + len(start_marker)
+                        end = logfile.index(end_marker,  start + 1)
+                        self.wfile.write(bytes('<td align=center>%s</td>' % (logfile[start:end]),  "utf-8"))
+                        if row == 0:
+                            row = 1
+                        elif row == 1:
+                            row = 0
+                            
+                self.wfile.write(bytes('</table>',  "utf-8"))
+                self.wfile.write(bytes('</div>',  "utf-8"))
+                self.wfile.write(bytes('<br>',  "utf-8"))
+                self.wfile.write(bytes('<div class="log">',  "utf-8"))
+                self.wfile.write(bytes('<table id="log">',  "utf-8"))
+                
+                if battery_logfile_list == []:
+                    self.wfile.write(bytes('<tr>',  "utf-8"))
+                    self.wfile.write(bytes('<td></td>',  "utf-8"))
+                    self.wfile.write(bytes('<td>No battery logs found</td>',  "utf-8"))
+                    self.wfile.write(bytes('<td></td>',  "utf-8"))
+                else:
+                    row = 0
+                    for logfile in battery_logfile_list:
+                        if row == 1:
+                            self.wfile.write(bytes('<tr>',  "utf-8"))
+                        elif row == 0:
+                            self.wfile.write(bytes('<tr bgcolor=#99e6ff>',  "utf-8"))
+                        self.wfile.write(bytes('<td><input type="checkbox" name="selected_logs" value="%s"></td>' % (logfile),  "utf-8"))
+                        self.wfile.write(bytes('<td>%s</td>' % (logfile),  "utf-8"))
+                        start = logfile.index(start_marker) + len(start_marker)
+                        end = logfile.index(end_marker,  start + 1)
+                        self.wfile.write(bytes('<td align=center>%s</td>' % (logfile[start:end]),  "utf-8"))
+                        if row == 0:
+                            row = 1
+                        elif row == 1:
+                            row = 0
+                        
+                self.wfile.write(bytes('</table>',  "utf-8"))
+                self.wfile.write(bytes('</div>',  "utf-8"))
+                self.wfile.write(bytes('<br>',  "utf-8"))
+                
+                self.wfile.write(bytes('<table width=75%>',  "utf-8"))
+                self.wfile.write(bytes('<tr>',  "utf-8"))
+                self.wfile.write(bytes('<td><button type="submit" name="download_logs" value="true">Download</button></td>',  "utf-8"))
+                self.wfile.write(bytes('<td></td>',  "utf-8"))
+                self.wfile.write(bytes('<td align=right><button type="submit" name="delete_logs_only" value="true">Delete Only</button></td>',  "utf-8"))
+                self.wfile.write(bytes('</table>',  "utf-8"))
+                
+                self.wfile.write(bytes('</form>',  "utf-8"))
+                self.wfile.write(bytes("</body></html>", "utf-8"))
+                
+            elif download_page == 2:
+                if len(logfile_list) > 1:
+                    tmp_zip = '/tmp/dpv-logs.zip'
+                    zipped_logs = zipfile.ZipFile(tmp_zip,  'w')
+                    for logfile in logfile_list:
+                        zipped_logs.write('%s/%s' % (log_dir,  logfile),  logfile)
+                    zipped_logs.close()
+                    zipf = open(tmp_zip,  'rb')
+                    fs = os.fstat(zipf.fileno())
+                    self.send_response(200)
+                    self.send_header("Content-Type",  'application/octet-stream')
+                    self.send_header("Content-Disposition",  'attachment; filename="{}"'.format(os.path.basename(tmp_zip)))
+                    self.send_header("Content-Length",  str(fs.st_size))
+                    self.end_headers()
+                    copyfileobj(zipf,  self.wfile)
+                    unlink(tmp_zip)
+                    
+                elif len(logfile_list) == 1:
+                    for logfile in logfile_list:
+                        with open('%s/%s' % (log_dir,  logfile)) as log:
+                            self.send_response(200)
+                            self.send_header("Content-Type",  'application/octet-stream')
+                            self.send_header("Content-Disposition",  'attachment; filename="{}"'.format(os.path.basename('%s/%s' % (log_dir,  logfile))))
+                            fs = os.fstat(log.fileno())
+                            self.send_header("Content-Length",  str(fs.st_size))
+                            self.end_headers()
+                            copyfileobj(log,  self.wfile)
         
     def do_HEAD(self):
         self._set_headers()
@@ -346,6 +349,31 @@ def get_battery_percent():
     sensorsocket.close()
     return(percent,  ert)
 
+def get_data():
+    connect_failed = 0
+    sensorsocket = socket.socket(socket.AF_UNIX,  socket.SOCK_STREAM)
+    sensor_address = data_hub_socket
+    try:
+        sensorsocket.connect(sensor_address)
+    except:
+        print("unable to connect to Gavin Data Hub daemon")
+        connect_failed = 1
+    if connect_failed == 0:
+        try:
+            msg = '{"request":"data"}'
+            sensorsocket.send(msg.encode())
+            try:
+                data = json.loads(sensorsocket.recv(512).decode())
+            except ValueError:
+                sensorsocket.close()
+                return
+            if len(data) > 0:
+                print('Hello')
+        except socket.error:
+            print("unable to request from",  id)
+            
+    return()
+    
 def start_stop_logging(logging_enable):
     connect_failed = 0
     sensorsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

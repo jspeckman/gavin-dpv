@@ -48,7 +48,8 @@ class gavin_gui(BaseHTTPRequestHandler):
 
     def do_GET(self,  download_page = 0,  logfile_list = []):
         if self.path == '/json':
-            print('yes')
+            self._set_headers()
+            self.wfile.write(bytes(str(get_data()),  "utf-8"))
         else:
             if download_page == 0:
                 mobile = 1
@@ -363,15 +364,19 @@ def get_data():
             msg = '{"request":"data"}'
             sensorsocket.send(msg.encode())
             try:
-                data = json.loads(sensorsocket.recv(512).decode())
+                data = json.loads(sensorsocket.recv(768).decode())
             except ValueError:
                 sensorsocket.close()
                 return
             if len(data) > 0:
-                print('Hello')
+                sensorsocket.close()
+                return(data)
+            else:
+                sensorsocket.close()
+                return()
         except socket.error:
             print("unable to request from",  id)
-            
+    sensorsocket.close()
     return()
     
 def start_stop_logging(logging_enable):

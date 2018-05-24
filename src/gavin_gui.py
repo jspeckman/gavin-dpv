@@ -10,10 +10,10 @@ from shutil import copyfileobj
 import zipfile
 
 id = 'Gavin GUI'
-version = '1.0.0'
+version = '1.0.1'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 log_dir = '/opt/gavin/log'
-port = 8080
+port = 80
 
 # setup config map
 config_map = {}

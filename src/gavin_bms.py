@@ -159,6 +159,7 @@ while True:
                 current_actual = float("{0:.2f}".format((adc_current_value - (adc_current_reference / 2)) * adc_OFFSET / adc_ACS770_OFFSET_adjusted * .001))
                 if current_actual == .01 or current_actual == -.01:
                     current_actual = 0
+                current_counter += current_actual
                 for battery_module in range(0, battery_map['modules']):
                     voltage_value[battery_module] = float("{0:.2f}".format(((adc.read_adc(battery_module + 1, gain=adc_GAIN, data_rate=adc_SPS) * adc_OFFSET) * adc_VOFFSET[battery_module]) * .001))
                 for battery_module in range(0, battery_map['modules']):
@@ -186,6 +187,8 @@ while True:
                 ert = int((battery_map['amphr'] * 10) / (config_map['motor_watts'] / 2) * 60)
                 #if battery_map['chemistry'] == 'SLA':
                     #ert = ert * .6
+            elif battery_map['initial_ert'] != 65535 and (watts_actual / 2) > 0:
+                ert = int((battery_map['amphr']  * 10) / (watts_actual / 2) * 60)
 
             if battery_map['chemistry'] == 'SLA':
                 if vbatt_actual <= (battery_map['min_voltage'] * battery_map['modules']):
@@ -195,7 +198,7 @@ while True:
                 else:
                     battery_percent = float("{0:.0f}".format((vbatt_actual - (battery_map['min_voltage'] * battery_map['modules'])) * 100 / ((battery_map['max_voltage']  * battery_map['modules']) - (battery_map['min_voltage'] * battery_map['modules']))))
 
-            battery_data = '{"voltage": %s, "current": "%s %s %s", "watts": %s, "ert": %s, "percent": %s,' % (str(vbatt_actual),  str(current_actual), str(adc_current_value), str(adc_current_reference), str(watts_actual), str(ert), str(battery_percent))
+            battery_data = '{"voltage": %s, "current": "%s %s %s", "coulomb counter": %s, "watts": %s, "ert": %s, "percent": %s,' % (str(vbatt_actual),  str(current_actual), str(adc_current_value), str(adc_current_reference), str(current_counter),  str(watts_actual), str(ert), str(battery_percent))
             for i in range(0, battery_map['modules']):
                 battery_data = '%s "v%s": %s, ' % (battery_data,  str(i + 1),  str(voltage_value[i]))
             battery_data = '%s "uuid": "%s"}' % (battery_data, battery_map['uuid'])

@@ -10,7 +10,7 @@ import json
 import socket
 
 id = 'Gavin BMS Daemon'
-version = '1.0.5'
+version = '1.0.6'
 
 try:
     import Adafruit_ADS1x15
@@ -29,6 +29,7 @@ if DEV_MODE != 1:
     adc_ACS770_OFFSET = 13.334
 
 voltage_value = []
+current_counter = 0
 
 # setup config map
 config_map = {}

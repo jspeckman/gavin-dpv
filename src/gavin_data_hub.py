@@ -14,7 +14,7 @@ import socket
 from datetime import date
 
 id = 'Gavin Data Hub Daemon'
-version = '1.0.11'
+version = '1.0.12'
 
 DEV_MODE = 0
 
@@ -34,6 +34,7 @@ sensor_data_map['bms']['voltage'] = ""
 sensor_data_map['bms']['v1'] = ""
 sensor_data_map['bms']['v2'] = ""
 sensor_data_map['bms']['current'] = ""
+sensor_data_map['bms']['coulomb_counter'] = ""
 sensor_data_map['bms']['watts'] = ""
 sensor_data_map['bms']['ert'] = ""
 sensor_data_map['bms']['percent'] = ""
@@ -153,6 +154,7 @@ def read_from_sensor_daemon(sensor_socket):
                     if 'v2' in data:
                         sensor_data_map['bms']['v2'] = data['v2']
                     sensor_data_map['bms']['current'] = data['current']
+                    sensor_data_map['bms']['coulomb_counter'] = data['coulomb counter']
                     sensor_data_map['bms']['watts'] = data['watts']
                     sensor_data_map['bms']['percent'] = data['percent']
                     sensor_data_map['bms']['ert'] = data['ert']

@@ -154,10 +154,11 @@ def read_from_sensor_daemon(sensor_socket):
                     if 'v2' in data:
                         sensor_data_map['bms']['v2'] = data['v2']
                     sensor_data_map['bms']['current'] = data['current']
-                    sensor_data_map['bms']['coulomb_counter'] = data['coulomb counter']
+                    sensor_data_map['bms']['current total'] = data['current total']
                     sensor_data_map['bms']['watts'] = data['watts']
                     sensor_data_map['bms']['percent'] = data['percent']
                     sensor_data_map['bms']['ert'] = data['ert']
+                    sensor_data_map['bms']['state'] = date['state']
                     sensor_data_map['bms']['uuid'] = data['uuid']
                 elif sensor_socket == config_map['imu_socket']:
                     sensor_data_map['imu']['heading'] = data['heading']

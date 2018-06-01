@@ -31,11 +31,7 @@ if DEV_MODE != 1:
     adc_ACS770_OFFSET = 13.334
 
 voltage_value = []
-<<<<<<< HEAD
 sensor_data_map = {}
-=======
-current_counter = 0
->>>>>>> 84108a3888002ec92de276ca780feed1252dd672
 
 # setup config map
 config_map = {}

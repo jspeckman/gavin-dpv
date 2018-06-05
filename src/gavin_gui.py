@@ -8,12 +8,13 @@ from os import unlink
 from os import system
 from shutil import copyfileobj
 import zipfile
+import datetime
 
 id = 'Gavin GUI'
-version = '1.0.1'
+version = '1.0.2'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 log_dir = '/opt/gavin/log'
-port = 80
+port = 8080
 
 # setup config map
 config_map = {}
@@ -61,17 +62,37 @@ class gavin_gui(BaseHTTPRequestHandler):
                     mobile = 0
                 
                 self._set_headers()
-                self.wfile.write(bytes('<html><head><meta http-equiv="refresh" content="60"><title>DPV Status</title></head><body>', "utf-8"))
-                self.wfile.write(bytes('<br>',  "utf-8"))
+                self.wfile.write(bytes('<html><head><meta http-equiv="refresh" content="60"><title>DPV Status</title></head>', "utf-8"))
                 
                 if config_map['clocksync'] != 'Internet':
+                    self.wfile.write(bytes('<body onload="displayTime()">',  "utf-8"))
+                    
                     self.wfile.write(bytes('<script>',  "utf-8"))
+                    now = datetime.datetime.now()
+                    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                    self.wfile.write(bytes('var serverTime = %d;' % ((now - midnight).seconds),  "utf-8"))
+                    self.wfile.write(bytes('var serverOffset = serverTime - getClientTime();',  "utf-8"))
+                    self.wfile.write(bytes('function getClientTime(){',  "utf-8"))
+                    self.wfile.write(bytes('var time = new Date();',  "utf-8"))
+                    self.wfile.write(bytes('return(time.getHours() * 60 * 60) + (time.getMinutes() * 60) + (time.getSeconds());',  "utf-8"))
+                    self.wfile.write(bytes('}',  "utf-8"))
+                    self.wfile.write(bytes('function displayTime(){',  "utf-8"))
+                    self.wfile.write(bytes('var serverTime = getClientTime() + serverOffset;',  "utf-8"))
+                    self.wfile.write(bytes('var hours = Math.floor(serverTime / 60 / 60);',  "utf-8"))
+                    self.wfile.write(bytes('var minutes = Math.floor(serverTime / 60 % (hours * 60));',  "utf-8"))
+                    self.wfile.write(bytes('var seconds = Math.floor(serverTime % 60);',  "utf-8"))
+                    self.wfile.write(bytes('document.getElementById("clock").innerHTML = ("0" + hours).slice(-2) + ":" + ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);',  "utf-8"))
+                    self.wfile.write(bytes('setTimeout(displayTime, 1000);',  "utf-8"))
+                    self.wfile.write(bytes('}',  "utf-8"))
                     self.wfile.write(bytes('function syncTime(){',  "utf-8"))
                     self.wfile.write(bytes('document.synctime.browser_time.value = Date();',  "utf-8"))
                     self.wfile.write(bytes('document.forms["synctime"].submit();',  "utf-8"))
                     self.wfile.write(bytes('}',  "utf-8"))
                     self.wfile.write(bytes('</script>',  "utf-8"))
-                
+                else:
+                    self.wfile.write(bytes('<body>',  "utf-8"))
+                    
+                self.wfile.write(bytes('<br>',  "utf-8"))
                 if mobile == 1:
                     self.wfile.write(bytes('<center><p style="font-size:100px;"><strong>Battery</p></center>', "utf-8"))
                     if battery_percent >= 75:
@@ -93,6 +114,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                         self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
                     if config_map['clocksync'] != 'Internet':
                         self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:60px;height:200px;width:500px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
+                        self.wfile.write(bytes('<center>DPV Time:<span id="clock"></span>',  "utf-8"))
                     
                 elif mobile == 0:
                     self.wfile.write(bytes('<center><p style="font-size:75px;"><strong>Battery</strong></p></center>', "utf-8"))
@@ -116,6 +138,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                     self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download_page" value="true"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
                     if config_map['clocksync'] != 'Internet':
                         self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:25px;height:70px;width:200px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
+                        self.wfile.write(bytes('<span id="clock"></span>',  "utf-8"))
     
                 self.wfile.write(bytes("</body></html>", "utf-8"))
                 

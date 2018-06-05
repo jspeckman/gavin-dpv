@@ -157,7 +157,7 @@ def read_sensors():
         sensor_data_map['adc_current_reference'] = 28000
         sensor_data_map['current_actual'] = 16
 
-def runtime_calculator(current_total):
+def runtime_calculator():
     # Simple runtime estimate, needs to be cleaned up later
     # ERT in minutes
     if battery_map['initial_ert'] == 65535 and (sensor_data_map['watts_actual'] / 2) > 0:
@@ -222,7 +222,7 @@ while True:
        
     if 'request' in request:
         if request['request'] == 'data':
-            battery_data = '{"voltage": %s, "current": "%s %s %s", "current total": %s, "watts": %s, "ert": %s, "percent": %s, "state": %s,' % (str(sensor_data_map['vbatt_actual']),  str(sensor_data_map['current_actual']), str(sensor_data_map['adc_current_value']), str(sensor_data_map['adc_current_reference']), str(sensor_data_map['current_total']),  str(sensor_data_map['watts_actual']), str(sensor_data_map['ert']), str(sensor_data_map['battery_percent']),  sensor_data_map['state'])
+            battery_data = '{"voltage": %s, "current": "%s %s %s", "current total": %s, "watts": %s, "ert": %s, "percent": %s, "state": "%s",' % (str(sensor_data_map['vbatt_actual']),  str(sensor_data_map['current_actual']), str(sensor_data_map['adc_current_value']), str(sensor_data_map['adc_current_reference']), str(sensor_data_map['current_total']),  str(sensor_data_map['watts_actual']), str(sensor_data_map['ert']), str(sensor_data_map['battery_percent']),  sensor_data_map['state'])
             for i in range(0, battery_map['modules']):
                 battery_data = '%s "v%s": %s, ' % (battery_data,  str(i + 1),  str(voltage_value[i]))
             battery_data = '%s "uuid": "%s"}' % (battery_data, battery_map['uuid'])

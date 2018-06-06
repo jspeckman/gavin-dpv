@@ -14,7 +14,7 @@ id = 'Gavin GUI'
 version = '1.0.2'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 log_dir = '/opt/gavin/log'
-port = 8080
+port = 80
 
 # setup config map
 config_map = {}
@@ -138,7 +138,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                     self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download_page" value="true"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
                     if config_map['clocksync'] != 'Internet':
                         self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:25px;height:70px;width:200px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
-                        self.wfile.write(bytes('<span id="clock"></span>',  "utf-8"))
+                        self.wfile.write(bytes('<center>DPV Time:<span id="clock"></span>',  "utf-8"))
     
                 self.wfile.write(bytes("</body></html>", "utf-8"))
                 

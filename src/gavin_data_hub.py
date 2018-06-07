@@ -158,7 +158,7 @@ def read_from_sensor_daemon(sensor_socket):
                     sensor_data_map['bms']['watts'] = data['watts']
                     sensor_data_map['bms']['percent'] = data['percent']
                     sensor_data_map['bms']['ert'] = data['ert']
-                    sensor_data_map['bms']['state'] = date['state']
+                    sensor_data_map['bms']['state'] = data['state']
                     sensor_data_map['bms']['uuid'] = data['uuid']
                 elif sensor_socket == config_map['imu_socket']:
                     sensor_data_map['imu']['heading'] = data['heading']
@@ -209,7 +209,7 @@ def data_aggregation_thread():
                 delay_counter = -1
                 
             time.sleep(1/2)
-            
+
         if config_map['shutdown_threads'] is True:
             break
     

@@ -13,6 +13,7 @@ from time import sleep
 
 id = 'Gavin BMS Daemon'
 version = '1.0.6'
+DEBUG = 1
 
 try:
     import Adafruit_ADS1x15
@@ -165,12 +166,18 @@ def runtime_calculator():
         #if battery_map['chemistry'] == 'SLA':
             #battery_map['initial_ert'] = int(battery_map['initial_ert'] * .6)
         sensor_data_map['ert'] = battery_map['initial_ert']
+        if DEBUG == 1:
+            print('ERT calc, no initial ert and current above 0: %d' % (sensor_data_map['ert']))
     elif battery_map['initial_ert'] == 65535 and sensor_data_map['watts_actual'] == 0:
         sensor_data_map['ert'] = int((battery_map['amphr'] * 10) / (config_map['motor_watts'] / 2) * 60)
         #if battery_map['chemistry'] == 'SLA':
             #ert = ert * .6
+        if DEBUG == 1:
+            print('ERT Calc, no initial ert and no current: %d' % (sensor_data_map['ert']))
     elif battery_map['initial_ert'] != 65535 and (sensor_data_map['watts_actual'] / 2) > 0:
-        sensor_data_map['ert'] = int((battery_map['amphr']  * 10) / (sensor_data_map['watts_actual'] / 2) * 60)
+        sensor_data_map['ert'] = int((battery_map['amphr']  * 10) / (sensor_data_map['watts_total'] / 2) * 60)
+        if DEBUG == 1:
+            print('ERT calc, initial ert set and current above 0: %d' % (sensor_data_map['ert']))
 
     if battery_map['chemistry'] == 'SLA':
         if sensor_data_map['vbatt_actual'] <= (battery_map['min_voltage'] * battery_map['modules']):
@@ -185,7 +192,10 @@ def coulomb_counter():
     
     while True:
         read_sensors()
-        sensor_data_map['current_total'] += sensor_data_map['current_actual_raw']
+        sensor_data_map['current_total'] += (sensor_data_map['current_actual'] / 3600)
+        sensor_data_map['watts_total'] = sensor_data_map['current_total'] * sensor_data_map['vbatt_actual']
+        if DEBUG == 1:
+            print('Current: %f, current total: %f' % (sensor_data_map['current_actual'],  sensor_data_map['current_total']))
         runtime_calculator()
         sleep(1)
     

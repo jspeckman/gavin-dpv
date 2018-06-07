@@ -12,7 +12,7 @@ from threading import Thread
 from time import sleep
 
 id = 'Gavin BMS Daemon'
-version = '1.0.6'
+version = '1.0.7'
 DEBUG = 1
 
 try:
@@ -136,9 +136,10 @@ def read_sensors():
             sensor_data_map['current_actual'] = 0
         else:
             sensor_data_map['current_actual'] = sensor_data_map['current_actual_raw']
-        if sensor_data_map['current_actual_raw'] > 0:
+            
+        if sensor_data_map['current_actual_raw'] > .01:
             sensor_data_map['state'] = 'discharging'
-        elif sensor_data_map['current_actual_raw'] < 0:
+        elif sensor_data_map['current_actual_raw'] < .01:
             sensor_data_map['state'] = 'charging'
         else:
             sensor_data_map['state'] = 'resting'
@@ -148,15 +149,18 @@ def read_sensors():
         for battery_module in range(0, battery_map['modules']):
             if battery_module < battery_map['modules'] - 1:
                 voltage_value[battery_module] = float("{0:.2f}".format(voltage_value[battery_module] - voltage_value[battery_module + 1]))
-
-        sensor_data_map['vbatt_actual'] = float("{0:.2f}".format(sum(voltage_value)))
-        sensor_data_map['watts_actual'] = float("{0:.2f}".format(sensor_data_map['current_actual'] * sensor_data_map['vbatt_actual']))
     else:
         voltage_value[0] = 12.33
         voltage_value[1] = 12.29
         sensor_data_map['adc_current_value'] = 13989   #Debugging
         sensor_data_map['adc_current_reference'] = 28000
         sensor_data_map['current_actual'] = 16
+        sensor_data_map['state'] = 'discharging'
+        
+    sensor_data_map['vbatt_actual'] = float("{0:.2f}".format(sum(voltage_value)))
+    sensor_data_map['watts_actual'] = float("{0:.2f}".format(sensor_data_map['current_actual'] * sensor_data_map['vbatt_actual']))
+    if sensor_data_map['current_max'] < sensor_data_map['current_actual']:
+        sensor_data_map['current_max'] = sensor_data_map['current_actual']
 
 def runtime_calculator():
     # Simple runtime estimate, needs to be cleaned up later
@@ -175,7 +179,7 @@ def runtime_calculator():
         if DEBUG == 1:
             print('ERT Calc, no initial ert and no current: %d' % (sensor_data_map['ert']))
     elif battery_map['initial_ert'] != 65535 and (sensor_data_map['watts_actual'] / 2) > 0:
-        sensor_data_map['ert'] = int((battery_map['amphr']  * 10) / (sensor_data_map['watts_total'] / 2) * 60)
+        sensor_data_map['ert'] = int(((battery_map['amphr']  - sensor_data_map['current_total']) * 10) / (sensor_data_map['watts_actual'] / 2) * 60)
         if DEBUG == 1:
             print('ERT calc, initial ert set and current above 0: %d' % (sensor_data_map['ert']))
 
@@ -189,6 +193,7 @@ def runtime_calculator():
 
 def coulomb_counter():
     sensor_data_map['current_total'] = 0
+    sensor_data_map['current_max'] = 0
     
     while True:
         read_sensors()
@@ -232,7 +237,7 @@ while True:
        
     if 'request' in request:
         if request['request'] == 'data':
-            battery_data = '{"voltage": %s, "current": "%s %s %s", "current total": %s, "watts": %s, "ert": %s, "percent": %s, "state": "%s",' % (str(sensor_data_map['vbatt_actual']),  str(sensor_data_map['current_actual']), str(sensor_data_map['adc_current_value']), str(sensor_data_map['adc_current_reference']), str(sensor_data_map['current_total']),  str(sensor_data_map['watts_actual']), str(sensor_data_map['ert']), str(sensor_data_map['battery_percent']),  sensor_data_map['state'])
+            battery_data = '{"voltage": %s, "current": "%s %s %s", "current total": %s, "current max": %s, "watts": %s, "ert": %s, "percent": %s, "state": "%s",' % (str(sensor_data_map['vbatt_actual']),  str(sensor_data_map['current_actual']), str(sensor_data_map['adc_current_value']), str(sensor_data_map['adc_current_reference']), str(sensor_data_map['current_total']),  str(sensor_data_map['current_max']),  str(sensor_data_map['watts_actual']), str(sensor_data_map['ert']), str(sensor_data_map['battery_percent']),  sensor_data_map['state'])
             for i in range(0, battery_map['modules']):
                 battery_data = '%s "v%s": %s, ' % (battery_data,  str(i + 1),  str(voltage_value[i]))
             battery_data = '%s "uuid": "%s"}' % (battery_data, battery_map['uuid'])

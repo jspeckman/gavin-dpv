@@ -12,7 +12,7 @@ from threading import Thread
 from time import sleep
 
 id = 'Gavin BMS Daemon'
-version = '1.0.8'
+version = '1.0.9'
 DEBUG = 0
 
 try:
@@ -131,15 +131,15 @@ def read_sensors():
         adc_current_reference_voltage = float("{0:.2f}".format((sensor_data_map['adc_current_reference'] * adc_OFFSET * .001)))
         adc_offset_percent = adc_current_reference_voltage / 5.0
         adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET * adc_offset_percent
-        sensor_data_map['current_actual_raw'] = float("{0:.2f}".format((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2)) * adc_OFFSET / adc_ACS770_OFFSET_adjusted * .001))
+        sensor_data_map['current_actual_raw'] = float("{0:.3f}".format((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2)) * adc_OFFSET / adc_ACS770_OFFSET_adjusted * .001))
         if -.01 <= sensor_data_map['current_actual_raw'] <= .01:
             sensor_data_map['current_actual'] = 0
         else:
             sensor_data_map['current_actual'] = sensor_data_map['current_actual_raw']
             
-        if sensor_data_map['current_actual_raw'] > .01:
+        if sensor_data_map['current_actual_raw'] > .005:
             sensor_data_map['state'] = 'discharging'
-        elif sensor_data_map['current_actual_raw'] < -.01:
+        elif sensor_data_map['current_actual_raw'] < -.005:
             sensor_data_map['state'] = 'charging'
         else:
             sensor_data_map['state'] = 'resting'
@@ -206,7 +206,7 @@ def coulomb_counter():
         sensor_data_map['current_total'] += (sensor_data_map['current_actual'] / 3600)
         sensor_data_map['watts_total'] = sensor_data_map['current_total'] * sensor_data_map['vbatt_actual']
         if DEBUG == 1:
-            print('Current: %f, current total: %f' % (sensor_data_map['current_actual'],  sensor_data_map['current_total']))
+            print('Current: %f, current total: %f' % (sensor_data_map['current_actual_raw'],  sensor_data_map['current_total']))
         runtime_calculator()
         sleep(1)
     

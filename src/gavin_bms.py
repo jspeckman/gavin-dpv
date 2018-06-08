@@ -13,7 +13,7 @@ from time import sleep
 
 id = 'Gavin BMS Daemon'
 version = '1.0.7'
-DEBUG = 1
+DEBUG = 0
 
 try:
     import Adafruit_ADS1x15
@@ -139,7 +139,7 @@ def read_sensors():
             
         if sensor_data_map['current_actual_raw'] > .01:
             sensor_data_map['state'] = 'discharging'
-        elif sensor_data_map['current_actual_raw'] < .01:
+        elif sensor_data_map['current_actual_raw'] < -.01:
             sensor_data_map['state'] = 'charging'
         else:
             sensor_data_map['state'] = 'resting'

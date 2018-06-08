@@ -12,7 +12,7 @@ from threading import Thread
 from time import sleep
 
 id = 'Gavin BMS Daemon'
-version = '1.0.7'
+version = '1.0.8'
 DEBUG = 0
 
 try:
@@ -163,26 +163,10 @@ def read_sensors():
         sensor_data_map['current_max'] = sensor_data_map['current_actual']
 
 def runtime_calculator():
-    # Simple runtime estimate, needs to be cleaned up later
+    # Simple runtime estimate based on ideal battery, and SoC, needs to be cleaned up later
     # ERT in minutes
-    if battery_map['initial_ert'] == 65535 and (sensor_data_map['watts_actual'] / 2) > 0:
-        battery_map['initial_ert'] = int((battery_map['amphr']  * 10) / (sensor_data_map['watts_actual'] / 2) * 60)
-        #if battery_map['chemistry'] == 'SLA':
-            #battery_map['initial_ert'] = int(battery_map['initial_ert'] * .6)
-        sensor_data_map['ert'] = battery_map['initial_ert']
-        if DEBUG == 1:
-            print('ERT calc, no initial ert and current above 0: %d' % (sensor_data_map['ert']))
-    elif battery_map['initial_ert'] == 65535 and sensor_data_map['watts_actual'] == 0:
-        sensor_data_map['ert'] = int((battery_map['amphr'] * 10) / (config_map['motor_watts'] / 2) * 60)
-        #if battery_map['chemistry'] == 'SLA':
-            #ert = ert * .6
-        if DEBUG == 1:
-            print('ERT Calc, no initial ert and no current: %d' % (sensor_data_map['ert']))
-    elif battery_map['initial_ert'] != 65535 and (sensor_data_map['watts_actual'] / 2) > 0:
-        sensor_data_map['ert'] = int(((battery_map['amphr']  - sensor_data_map['current_total']) * 10) / (sensor_data_map['watts_actual'] / 2) * 60)
-        if DEBUG == 1:
-            print('ERT calc, initial ert set and current above 0: %d' % (sensor_data_map['ert']))
-
+    
+    # SoC based on open circuit voltage.  min_voltage also valid for load
     if battery_map['chemistry'] == 'SLA':
         if sensor_data_map['vbatt_actual'] <= (battery_map['min_voltage'] * battery_map['modules']):
             sensor_data_map['battery_percent'] = 0
@@ -191,6 +175,28 @@ def runtime_calculator():
         else:
             sensor_data_map['battery_percent'] = float("{0:.0f}".format((sensor_data_map['vbatt_actual'] - (battery_map['min_voltage'] * battery_map['modules'])) * 100 / ((battery_map['max_voltage']  * battery_map['modules']) - (battery_map['min_voltage'] * battery_map['modules']))))
 
+    # Initial ERT when current is detected
+    if battery_map['initial_ert'] == 65535 and (sensor_data_map['watts_actual'] / 2) > 0:
+        battery_map['initial_ert'] = int((battery_map['amphr']  * 10) / (sensor_data_map['watts_actual'] / 2) * 60)
+        #if battery_map['chemistry'] == 'SLA':
+            #battery_map['initial_ert'] = int(battery_map['initial_ert'] * .6)
+        sensor_data_map['ert'] = battery_map['initial_ert']
+        if DEBUG == 1:
+            print('ERT calc, no initial ert and current above 0: %d' % (sensor_data_map['ert']))
+    # Initial ERT calc based on battery amphr rating and max motor wattage.  Assumes open circuit voltage
+    elif battery_map['initial_ert'] == 65535 and sensor_data_map['watts_actual'] == 0:
+        sensor_data_map['ert'] = int((battery_map['amphr'] * 10) / (config_map['motor_watts'] / 2) * 60 * (sensor_data_map['battery_percent'] / 100))
+        #if battery_map['chemistry'] == 'SLA':
+            #ert = ert * .6
+        if DEBUG == 1:
+            print('ERT Calc, no initial ert and no current: %d' % (sensor_data_map['ert']))
+    # Update running ERT
+    elif battery_map['initial_ert'] != 65535 and (sensor_data_map['watts_actual'] / 2) > 0:
+        sensor_data_map['ert'] = int(((battery_map['amphr']  - sensor_data_map['current_total']) * 10) / (sensor_data_map['watts_actual'] / 2) * 60)
+        if DEBUG == 1:
+            print('ERT calc, initial ert set and current above 0: %d' % (sensor_data_map['ert']))
+
+    
 def coulomb_counter():
     sensor_data_map['current_total'] = 0
     sensor_data_map['current_max'] = 0

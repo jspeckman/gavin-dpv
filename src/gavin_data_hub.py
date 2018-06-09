@@ -14,7 +14,7 @@ import socket
 from datetime import date
 
 id = 'Gavin Data Hub Daemon'
-version = '1.0.14'
+version = '1.0.15'
 
 DEV_MODE = 0
 
@@ -26,8 +26,8 @@ sensor_data_map = {}
 sensor_data_map['environment'] = {}
 sensor_data_map['bms'] = {}
 sensor_data_map['imu'] = {}
-sensor_data_map['environment']['internal_temperature'] = ""
-sensor_data_map['environment']['internal_pressure'] = ""
+sensor_data_map['environment']['internal temperature'] = ""
+sensor_data_map['environment']['internal pressure'] = ""
 sensor_data_map['environment']['humidity'] = ""
 sensor_data_map['bms']['uuid'] = ""
 sensor_data_map['bms']['voltage'] = ""
@@ -145,8 +145,8 @@ def read_from_sensor_daemon(sensor_socket):
                 if DEV_MODE == 1:
                     print(data)
                 if sensor_socket == config_map['env_socket']:
-                    sensor_data_map['environment']['internal_temperature'] = data['internal_temperature']
-                    sensor_data_map['environment']['internal_pressure'] = data['internal_pressure']
+                    sensor_data_map['environment']['internal temperature'] = data['internal temperature']
+                    sensor_data_map['environment']['internal pressure'] = data['internal pressure']
                     sensor_data_map['environment']['humidity'] = data['humidity']
                 elif sensor_socket == config_map['bms_socket']:
                     sensor_data_map['bms']['voltage'] = data['voltage']
@@ -233,10 +233,10 @@ def flight_logging_thread():
                     if header == 1:
                         flightlog.write('Timestamp,Heading,Roll,Pitch,QX,QY,QZ,QW,Internal Temperature,Internal Pressure,Humidity,ERT,DPV UUID')
                         header = 0
-                    flightlog.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()),  str(sensor_data_map['imu']['heading']),  str(sensor_data_map['imu']['roll']),  str(sensor_data_map['imu']['pitch']),  str(sensor_data_map['imu']['qx']),  str(sensor_data_map['imu']['qy']),  str(sensor_data_map['imu']['qz']),  str(sensor_data_map['imu']['qw']),  str(sensor_data_map['environment']['internal_temperature']),  str(sensor_data_map['environment']['internal_pressure']),  str(sensor_data_map['environment']['humidity']),  str(sensor_data_map['bms']['ert']),  str(config_map['uuid'])))
+                    flightlog.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()),  str(sensor_data_map['imu']['heading']),  str(sensor_data_map['imu']['roll']),  str(sensor_data_map['imu']['pitch']),  str(sensor_data_map['imu']['qx']),  str(sensor_data_map['imu']['qy']),  str(sensor_data_map['imu']['qz']),  str(sensor_data_map['imu']['qw']),  str(sensor_data_map['environment']['internal temperature']),  str(sensor_data_map['environment']['internal pressure']),  str(sensor_data_map['environment']['humidity']),  str(sensor_data_map['bms']['ert']),  str(config_map['uuid'])))
                 if DEV_MODE == 1:
                     print("Logfile Name:",  logfile)
-                    print('Flight Log data: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()),  str(sensor_data_map['imu']['heading']),  str(sensor_data_map['imu']['roll']),  str(sensor_data_map['imu']['pitch']),  str(sensor_data_map['imu']['qx']),  str(sensor_data_map['imu']['qy']),  str(sensor_data_map['imu']['qz']),  str(sensor_data_map['imu']['qw']),  str(sensor_data_map['environment']['internal_temperature']),  str(sensor_data_map['environment']['internal_pressure']), str(sensor_data_map['environment']['humidity']), str(sensor_data_map['bms']['ert']), str(config_map['uuid'])))
+                    print('Flight Log data: %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()),  str(sensor_data_map['imu']['heading']),  str(sensor_data_map['imu']['roll']),  str(sensor_data_map['imu']['pitch']),  str(sensor_data_map['imu']['qx']),  str(sensor_data_map['imu']['qy']),  str(sensor_data_map['imu']['qz']),  str(sensor_data_map['imu']['qw']),  str(sensor_data_map['environment']['internal temperature']),  str(sensor_data_map['environment']['internal pressure']), str(sensor_data_map['environment']['humidity']), str(sensor_data_map['bms']['ert']), str(config_map['uuid'])))
         time.sleep(config_map['sample_rate'])
         if config_map['shutdown_threads'] is True:
             break
@@ -262,10 +262,10 @@ def battery_logging_thread():
                     if header == 1:
                         batterylog.write('Timestamp,Voltage,V1,V2,Watts,Current,Percent,ERT,Battery UUID')
                         header = 0
-                    batterylog.write('%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(sensor_data_map['bms']['voltage']), str(sensor_data_map['bms']['v1']), str(sensor_data_map['bms']['v2']), str(sensor_data_map['bms']['watts']), str(sensor_data_map['bms']['current']), str(sensor_data_map['bms']['percent']), str(sensor_data_map['bms']['ert']), str(sensor_data_map['bms']['uuid'])))
+                    batterylog.write('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(sensor_data_map['bms']['voltage']), str(sensor_data_map['bms']['v1']), str(sensor_data_map['bms']['v2']), str(sensor_data_map['bms']['watts']), str(sensor_data_map['bms']['current']), str(sensor_data_map['bms']['current max']), str(sensor_data_map['bms']['current total']), str(sensor_data_map['bms']['percent']), str(sensor_data_map['bms']['ert']), str(sensor_data_map['bms']['uuid'])))
                 if DEV_MODE == 1:
                     print("Logfile Name:",  logfile)
-                    print('%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(sensor_data_map['bms']['voltage']), str(sensor_data_map['bms']['v1']), str(sensor_data_map['bms']['v2']), str(sensor_data_map['bms']['watts']), str(sensor_data_map['bms']['current']), str(sensor_data_map['bms']['percent']), str(sensor_data_map['bms']['ert']), str(sensor_data_map['bms']['uuid'])))
+                    print('%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' % ('{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()), str(sensor_data_map['bms']['voltage']), str(sensor_data_map['bms']['v1']), str(sensor_data_map['bms']['v2']), str(sensor_data_map['bms']['watts']), str(sensor_data_map['bms']['current']), str(sensor_data_map['bms']['current max']), str(sensor_data_map['bms']['current total']),  str(sensor_data_map['bms']['percent']), str(sensor_data_map['bms']['ert']), str(sensor_data_map['bms']['uuid'])))
                     time.sleep(config_map['sample_rate'])
         if config_map['shutdown_threads'] is True:
             break

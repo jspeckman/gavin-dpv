@@ -11,9 +11,10 @@ import zipfile
 import datetime
 
 id = 'Gavin GUI'
-version = '1.0.2'
+version = '1.0.3'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 log_dir = '/opt/gavin/log'
+share_dir = '/opt/gavin/share'
 port = 80
 
 # setup config map
@@ -51,6 +52,14 @@ class gavin_gui(BaseHTTPRequestHandler):
         if self.path == '/json':
             self._set_headers()
             self.wfile.write(bytes(str(get_data()),  "utf-8"))
+        if self.path == '/favicon.png':
+            self.send_response(200)
+            self.send_header("Content-type", "image/png")
+            #self.send_header("Content-length", img_size)
+            self.end_headers()
+            f = open('%s/favicon.png' % (share_dir), 'rb')
+            self.wfile.write(f.read())
+            f.close()
         else:
             if download_page == 0:
                 mobile = 1
@@ -62,7 +71,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                     mobile = 0
                 
                 self._set_headers()
-                self.wfile.write(bytes('<html><head><meta http-equiv="refresh" content="60"><title>DPV Status</title></head>', "utf-8"))
+                self.wfile.write(bytes('<html><head><meta http-equiv="refresh" content="60"><title>DPV Status</title><link rel="icon" href="/favicon.png"></head>', "utf-8"))
                 
                 if config_map['clocksync'] != 'Internet':
                     self.wfile.write(bytes('<body onload="displayTime()">',  "utf-8"))
@@ -149,7 +158,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                 battery_logfile_list = get_logfile_list('battery_log')
     
                 self._set_headers()
-                self.wfile.write(bytes('<html><head><title>DPV Logs</title></head><body>', "utf-8"))
+                self.wfile.write(bytes('<html><head><title>DPV Logs</title><link rel="icon" href="/favicon.png"></head><body>', "utf-8"))
                 
                 self.wfile.write(bytes('<script language="JavaScript">', "utf-8"))
                 self.wfile.write(bytes('function select_all(source) {', "utf-8"))

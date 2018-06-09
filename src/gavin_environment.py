@@ -9,7 +9,7 @@ import json
 import socket
 
 id = 'Gavin Environmental Daemon'
-version = '1.0.5'
+version = '1.0.6'
 
 try:
     from Adafruit_BME280 import *
@@ -99,7 +99,7 @@ while True:
                 internal_mBar = float("{0:.3f}".format(78784 / 100))
                 humidity = -1
 #elevation = (1 - (mBar / 1013.25) ** .190284) * 145366.45
-            msg = json.dumps({'internal_temperature': internal_temp, 'internal_pressure': internal_mBar, 'humidity': humidity}, indent = 4, sort_keys = True, separators=(',', ': '))
+            msg = json.dumps({'internal temperature': internal_temp, 'internal pressure': internal_mBar, 'humidity': humidity}, indent = 4, sort_keys = True, separators=(',', ': '))
 
         elif request['request'] == 'reload':
             read_config()

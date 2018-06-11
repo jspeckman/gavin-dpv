@@ -12,7 +12,7 @@ from threading import Thread
 from time import sleep
 
 id = 'Gavin BMS Daemon'
-version = '1.0.9'
+version = '1.0.10'
 DEBUG = 0
 
 try:
@@ -126,12 +126,11 @@ def read_battery_config():
 
 def read_sensors():
     if DEV_MODE != 1:
-        sensor_data_map['adc_current_value'] = adc.read_adc(0, gain=adc_GAIN, data_rate=adc_SPS)
         sensor_data_map['adc_current_reference'] = adc.read_adc(3, gain=adc_GAIN, data_rate=adc_SPS)
-        adc_current_reference_voltage = float("{0:.2f}".format((sensor_data_map['adc_current_reference'] * adc_OFFSET * .001)))
+        adc_current_reference_voltage = float("{0:.4f}".format((sensor_data_map['adc_current_reference'] * adc_OFFSET * .001)))
         adc_offset_percent = adc_current_reference_voltage / 5.0
-        adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET * adc_offset_percent
-        sensor_data_map['current_actual_raw'] = float("{0:.3f}".format((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2)) * adc_OFFSET / adc_ACS770_OFFSET_adjusted * .001))
+        adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET / 1000 * adc_offset_percent
+        sensor_data_map['current_actual_raw'] = float("{0:.4f}".format((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2)) * adc_OFFSET * .001 / adc_ACS770_OFFSET_adjusted))
         if -.01 <= sensor_data_map['current_actual_raw'] <= .01:
             sensor_data_map['current_actual'] = 0
         else:
@@ -153,7 +152,7 @@ def read_sensors():
         voltage_value[0] = 12.33
         voltage_value[1] = 12.29
         sensor_data_map['adc_current_value'] = 13989   #Debugging
-        sensor_data_map['adc_current_reference'] = 28000
+        sensor_data_map['adc_current_reference'] = 27189
         sensor_data_map['current_actual'] = 16
         sensor_data_map['state'] = 'discharging'
         
@@ -198,17 +197,25 @@ def runtime_calculator():
 
     
 def coulomb_counter():
+    avg_counter = 0
+    avg_current = 0
     sensor_data_map['current_total'] = 0
     sensor_data_map['current_max'] = 0
     
     while True:
-        read_sensors()
-        sensor_data_map['current_total'] += (sensor_data_map['current_actual'] / 3600)
-        sensor_data_map['watts_total'] = sensor_data_map['current_total'] * sensor_data_map['vbatt_actual']
-        if DEBUG == 1:
-            print('Current: %f, current total: %f' % (sensor_data_map['current_actual_raw'],  sensor_data_map['current_total']))
-        runtime_calculator()
-        sleep(1)
+        avg_current += adc.read_adc(0, gain=adc_GAIN, data_rate=adc_SPS)
+        if avg_counter == 10:
+            sensor_data_map['adc_current_value'] = avg_current / 10
+            read_sensors()
+            sensor_data_map['current_total'] += (sensor_data_map['current_actual'] / 3600)
+            sensor_data_map['watts_total'] = sensor_data_map['current_total'] * sensor_data_map['vbatt_actual']
+            if DEBUG == 1:
+                print('Current: %f, current total: %f' % (sensor_data_map['current_actual_raw'],  sensor_data_map['current_total']))
+            runtime_calculator()
+            avg_counter = 0
+            avg_current = 0
+        avg_counter += 1
+        sleep(1/10)
     
 # Get values from config file
 read_config()

@@ -330,7 +330,7 @@ class gavin_gui(BaseHTTPRequestHandler):
         if delete_selected_logs == 1:
             delete_logfiles(logfile_list)
         elif delete_selected_logs == 0 and delete_logs == 1 and download_logs == 1:
-            self.do_GET(download_page = 2)
+            self.do_GET(download_page = 2, logfile_list = logfile_list)
             delete_logfiles(logfile_list)
         elif delete_selected_logs == 0 and delete_logs == 0 and download_logs == 1:
             self.do_GET(download_page = 2,  logfile_list = logfile_list)

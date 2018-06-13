@@ -30,6 +30,7 @@ if DEV_MODE != 1:
     adc_OFFSET = .1875
     adc_VOFFSET = [5.545, 5]
     adc_ACS770_OFFSET = 13.334
+    adc_ACS770_ERROR = 37
 
 voltage_value = []
 sensor_data_map = {}
@@ -63,6 +64,8 @@ battery_map['voltage'] = 12
 battery_map['amphr'] = 35
 battery_map['min_voltage'] = 10
 battery_map['max_voltage'] = 13.1
+
+sensor_data_map['ert'] = 0
 
 # Server values
 serversocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -126,12 +129,11 @@ def read_battery_config():
 
 def read_sensors():
     if DEV_MODE != 1:
-        sensor_data_map['adc_current_reference'] = adc.read_adc(3, gain=adc_GAIN, data_rate=adc_SPS)
         adc_current_reference_voltage = float("{0:.4f}".format((sensor_data_map['adc_current_reference'] * adc_OFFSET * .001)))
         adc_offset_percent = adc_current_reference_voltage / 5.0
         adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET / 1000 * adc_offset_percent
-        sensor_data_map['current_actual_raw'] = float("{0:.4f}".format((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2)) * adc_OFFSET * .001 / adc_ACS770_OFFSET_adjusted))
-        if -.01 <= sensor_data_map['current_actual_raw'] <= .01:
+        sensor_data_map['current_actual_raw'] = float("{0:.4f}".format(((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2) - adc_ACS770_ERROR) * adc_OFFSET) * .001 / adc_ACS770_OFFSET_adjusted))
+        if -.005 <= sensor_data_map['current_actual_raw'] <= .005:
             sensor_data_map['current_actual'] = 0
         else:
             sensor_data_map['current_actual'] = sensor_data_map['current_actual_raw']
@@ -160,6 +162,10 @@ def read_sensors():
     sensor_data_map['watts_actual'] = float("{0:.2f}".format(sensor_data_map['current_actual'] * sensor_data_map['vbatt_actual']))
     if sensor_data_map['current_max'] < sensor_data_map['current_actual']:
         sensor_data_map['current_max'] = sensor_data_map['current_actual']
+    if sensor_data_map['adc_current_min'] > sensor_data_map['adc_current_value']:
+        sensor_data_map['adc_current_min'] = sensor_data_map['adc_current_value']
+    if sensor_data_map['adc_current_max'] < sensor_data_map['adc_current_value']:
+        sensor_data_map['adc_current_max'] = sensor_data_map['adc_current_value']
 
 def runtime_calculator():
     # Simple runtime estimate based on ideal battery, and SoC, needs to be cleaned up later
@@ -197,16 +203,24 @@ def runtime_calculator():
 
     
 def coulomb_counter():
+    startup = 1
     avg_counter = 0
     avg_current = 0
+    avg_ref = 0
     sensor_data_map['current_total'] = 0
     sensor_data_map['current_max'] = 0
+    sensor_data_map['adc_current_min'] = 13833
+    sensor_data_map['adc_current_max'] = 13111
     
     while True:
         avg_current += adc.read_adc(0, gain=adc_GAIN, data_rate=adc_SPS)
-        if avg_counter == 10:
-            sensor_data_map['adc_current_value'] = avg_current / 10
+        avg_ref += adc.read_adc(3, gain=adc_GAIN, data_rate=adc_SPS)
+        if avg_counter == 10 and startup == 0:
+            sensor_data_map['adc_current_value'] = int(round(avg_current / 10))
+            sensor_data_map['adc_current_reference'] = int(round(avg_ref / 10))
             read_sensors()
+            if DEBUG == 1:
+                print('adc value: %d  supply value: %d' % (sensor_data_map['adc_current_value'], sensor_data_map['adc_current_reference']))
             sensor_data_map['current_total'] += (sensor_data_map['current_actual'] / 3600)
             sensor_data_map['watts_total'] = sensor_data_map['current_total'] * sensor_data_map['vbatt_actual']
             if DEBUG == 1:
@@ -214,6 +228,12 @@ def coulomb_counter():
             runtime_calculator()
             avg_counter = 0
             avg_current = 0
+            avg_ref = 0
+        elif avg_counter == 10 and startup == 1:
+            avg_counter = 0
+            avg_current = 0
+            avg_ref = 0
+            startup = 0
         avg_counter += 1
         sleep(1/10)
     
@@ -250,6 +270,8 @@ while True:
        
     if 'request' in request:
         if request['request'] == 'data':
+            if DEBUG == 1:
+                print('adc current min: %d  adc current max: %d' % (sensor_data_map['adc_current_min'], sensor_data_map['adc_current_max']))
             battery_data = '{"voltage": %s, "current": "%s %s %s", "current total": %s, "current max": %s, "watts": %s, "ert": %s, "percent": %s, "state": "%s",' % (str(sensor_data_map['vbatt_actual']),  str(sensor_data_map['current_actual']), str(sensor_data_map['adc_current_value']), str(sensor_data_map['adc_current_reference']), str(sensor_data_map['current_total']),  str(sensor_data_map['current_max']),  str(sensor_data_map['watts_actual']), str(sensor_data_map['ert']), str(sensor_data_map['battery_percent']),  sensor_data_map['state'])
             for i in range(0, battery_map['modules']):
                 battery_data = '%s "v%s": %s, ' % (battery_data,  str(i + 1),  str(voltage_value[i]))

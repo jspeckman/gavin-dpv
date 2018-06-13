@@ -15,7 +15,7 @@ version = '1.0.3'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 log_dir = '/opt/gavin/log'
 share_dir = '/opt/gavin/share'
-port = 8080
+port = 80
 
 # setup config map
 config_map = {}
@@ -63,7 +63,7 @@ class gavin_gui(BaseHTTPRequestHandler):
         else:
             if download_page == 0:
                 mobile = 1
-                battery_percent,  battery_ert,  battery_state = get_battery_percent()
+                battery_percent,  battery_ert, battery_state = get_battery_percent()
                 logging_status = get_logging_status()
                 if 'Mobile' in self.headers['User-Agent']:
                     mobile = 1
@@ -128,11 +128,11 @@ class gavin_gui(BaseHTTPRequestHandler):
                 elif mobile == 0:
                     self.wfile.write(bytes('<center><p style="font-size:75px;padding-top: 20px;"><strong>Battery</strong></p></center>', "utf-8"))
                     if battery_percent >= 75:
-                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;margin-bottom:15px;color:green"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;margin-bottom:20px;color:green"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
                     elif 63 <= battery_percent < 75:
-                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;margin-bottom:15px;color:orange"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;margin-bottom:20px;color:orange"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
                     elif 0 <= battery_percent < 63:
-                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;margin-bottom:15px;color:red"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
+                        self.wfile.write(bytes('<center><p style="line-height:10%%;font-size:75px;margin-bottom:20px;color:red"><strong>%d %%</strong></p></center>' % (battery_percent), "utf-8"))
                     elif battery_percent == -1:
                         self.wfile.write(bytes('<center><p style="font-size:25px;color:red"><strong>Unable to get battery status</strong></p></center>', "utf-8"))
                     self.wfile.write(bytes('<center><p style="font-size:25px;margin-top:0em;">%s</p></center>' % (battery_state), "utf-8"))
@@ -386,7 +386,7 @@ def get_battery_percent():
         state = 'unknown'
         
     sensorsocket.close()
-    return(percent,  ert,  state)
+    return(percent,  ert, state)
 
 def get_data():
     connect_failed = 0

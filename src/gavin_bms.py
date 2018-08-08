@@ -12,7 +12,7 @@ from threading import Thread
 from time import sleep
 
 id = 'Gavin BMS Daemon'
-version = '1.0.10'
+version = '1.1.0'
 DEBUG = 0
 
 try:
@@ -213,8 +213,8 @@ def coulomb_counter():
     sensor_data_map['adc_current_max'] = 13111
     
     while True:
-        avg_current += adc.read_adc(0, gain=adc_GAIN, data_rate=adc_SPS)
-        avg_ref += adc.read_adc(3, gain=adc_GAIN, data_rate=adc_SPS)
+        avg_current += adc.read_adc(3, gain=adc_GAIN, data_rate=adc_SPS)
+        avg_ref += adc.read_adc(0, gain=adc_GAIN, data_rate=adc_SPS)
         if avg_counter == 10 and startup == 0:
             sensor_data_map['adc_current_value'] = int(round(avg_current / 10))
             sensor_data_map['adc_current_reference'] = int(round(avg_ref / 10))

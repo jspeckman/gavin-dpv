@@ -15,7 +15,7 @@ try:
     from Adafruit_BME280 import *
     DEV_MODE = 0
 except ImportError:
-    print("BME/BMP sensor module not found, entering offline dev mode.")
+    print('BME/BMP sensor module not found, entering offline dev mode.')
     DEV_MODE = 1
     
 if DEV_MODE != 1:
@@ -26,11 +26,11 @@ if DEV_MODE != 1:
 config_map = {}
 
 # Config file location
-config_map['config_dir'] = "/opt/gavin/etc"
-config_map['config_file'] = "config.json"
+config_map['config_dir'] = '/opt/gavin/etc'
+config_map['config_file'] = 'config.json'
 
 # Default config values
-config_map['units'] = "Imperial"
+config_map['units'] = 'Imperial'
 
 # Server values
 serversocket = socket.socket(socket.AF_UNIX,  socket.SOCK_STREAM)
@@ -52,9 +52,9 @@ def read_config(config_map):
                 if 'units' in config:
                     config_map['units'] = config['units']
             except ValueError:
-                print("Corrupt config file, loading defaults.")
+                print('Corrupt config file, loading defaults.')
     else:
-        print("Config file not found, using defaults.")
+        print('Config file not found, using defaults.')
     return(config_map)
 
 # Get values from config file
@@ -64,7 +64,7 @@ config_map = read_config(config_map)
 serversocket.bind(socket_file)
 serversocket.listen(2)
 
-print("%s %s listening on %s" % (id, version, socket_file))
+print('%s %s listening on %s' % (id, version, socket_file))
 
 # Main loop
 while True:
@@ -72,7 +72,7 @@ while True:
     
     clientsocket, addr = serversocket.accept()
     if DEV_MODE == 1:
-        print("Got a connection")
+        print('Got a connection')
     
     incomming = clientsocket.recv(32).decode()
     try:
@@ -85,19 +85,19 @@ while True:
         if request['request'] == 'data':
             if DEV_MODE != 1:
                 if config_map['units'] == 'Imperial':
-                    internal_temp = float("{0:.1f}".format(internal_sensor.read_temperature() * 1.8 + 32))
+                    internal_temp = float('{0:.1f}'.format(internal_sensor.read_temperature() * 1.8 + 32))
                 else: 
-                    internal_temp = float("{0:.1f}".format(internal_sensor.read_temperature()))
+                    internal_temp = float('{0:.1f}'.format(internal_sensor.read_temperature()))
                 # Pressure must be read AFTER temperature
-                internal_mBar = float("{0:.3f}".format(internal_sensor.read_pressure() / 100))
-                humidity = float("{0:.1f}".format(internal_sensor.read_humidity()))
+                internal_mBar = float('{0:.3f}'.format(internal_sensor.read_pressure() / 100))
+                humidity = float('{0:.1f}'.format(internal_sensor.read_humidity()))
             else:
                 if config_map['units'] == 'Imperial':
-                    internal_temp = float("{0:.1f}".format(33.82345 * 1.8 + 32))
+                    internal_temp = float('{0:.1f}'.format(33.82345 * 1.8 + 32))
                 else: 
-                    internal_temp = float("{0:.1f}".format(33.82345))
+                    internal_temp = float('{0:.1f}'.format(33.82345))
                 # Pressure must be read AFTER temperature
-                internal_mBar = float("{0:.3f}".format(78784 / 100))
+                internal_mBar = float('{0:.3f}'.format(78784 / 100))
                 humidity = -1
 #elevation = (1 - (mBar / 1013.25) ** .190284) * 145366.45
             msg = json.dumps({'internal temperature': internal_temp, 'internal pressure': internal_mBar, 'humidity': humidity}, indent = 4, sort_keys = True, separators=(',', ': '))
@@ -125,4 +125,4 @@ while True:
     
 clientsocket.send(msg.encode('ascii'))
 clientsocket.close()
-print(id,  "exiting")
+print('%s exiting' % (id))

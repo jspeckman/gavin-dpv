@@ -201,7 +201,7 @@ watchdog_thread.start()
 serversocket.bind(socket_file)
 serversocket.listen(2)
 
-print(id,  version,  "listening on",  socket_file)
+print("%s %s listening on %s" % (id, version, socket_file))
 
 # Main loop
 while True:

@@ -5,9 +5,9 @@ Hardware:
  2) rtc - pcf8523 + battery
  3) imu - bno055
  4) Pressure/Temp/humidity - bme280
- 5) adc - ads1115
+ 5) adc - ads1x15
  6) voltage dividers on each battery
- 7) current detection - acs770 (150 amp)
+ 7) current detection - acs7xx (50 amp bidirectional)
  8) ubec power supply - dzs elec mini 6-24v -> 5v 3A usb
  9) 2 gpio push buttons
 10) ssd-1306 oled panel

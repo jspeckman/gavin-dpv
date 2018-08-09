@@ -9,7 +9,7 @@ import json
 import socket
 
 id = 'Gavin Environmental Daemon'
-version = '1.0.6'
+version = '1.0.7'
 
 try:
     from Adafruit_BME280 import *
@@ -44,7 +44,7 @@ except OSError:
         raise
 
 # Function to read or reread config file
-def read_config():
+def read_config(config_map):
     if os.path.isfile('%s/%s' % (config_map['config_dir'], config_map['config_file'])):
         with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'r') as configfile:
             try:
@@ -54,16 +54,17 @@ def read_config():
             except ValueError:
                 print("Corrupt config file, loading defaults.")
     else:
-        print("Config file not found, loading defaults.")
+        print("Config file not found, using defaults.")
+    return(config_map)
 
 # Get values from config file
-read_config()
+config_map = read_config(config_map)
 
 # Setup socket and 2 listeners
 serversocket.bind(socket_file)
 serversocket.listen(2)
 
-print(id,  version,  "listening on",  socket_file)
+print("%s %s listening on %s" % (id, version, socket_file))
 
 # Main loop
 while True:
@@ -102,7 +103,7 @@ while True:
             msg = json.dumps({'internal temperature': internal_temp, 'internal pressure': internal_mBar, 'humidity': humidity}, indent = 4, sort_keys = True, separators=(',', ': '))
 
         elif request['request'] == 'reload':
-            read_config()
+            config_map = read_config(config_map)
             msg = json.dumps({'reload': 'complete'}, indent = 4, sort_keys = True, separators=(',', ': '))
             
         elif request['request'] == 'shutdown':

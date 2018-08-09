@@ -11,7 +11,7 @@ import zipfile
 import datetime
 
 id = 'Gavin GUI'
-version = '1.0.3'
+version = '1.0.4'
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 log_dir = '/opt/gavin/log'
 share_dir = '/opt/gavin/share'
@@ -27,7 +27,7 @@ config_map['config_file'] = "config.json"
 config_map['clocksync'] = 'Both'
 
 # Function to read or reread config file
-def read_config():
+def read_config(config_map):
     if os.path.isfile('%s/%s' % (config_map['config_dir'], config_map['config_file'])):
         with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'r') as configfile:
             try:
@@ -38,9 +38,10 @@ def read_config():
                 print("Corrupt config file, loading defaults.")
     else:
         print("Config file not found, loading defaults.")
+    return(config_map)
         
 # Get values from config file
-read_config()
+config_map = read_config(config_map)
 
 class gavin_gui(BaseHTTPRequestHandler):
     def _set_headers(self):
@@ -492,6 +493,6 @@ def run(server_class=HTTPServer, handler_class=gavin_gui, port=80):
     print('Starting httpd...')
     httpd.serve_forever()
 
-print(id,  version,  "listening on port %d" % (port))
+print("%s %s listening on port %d" % (id, version, port))
 
 run(port=port)

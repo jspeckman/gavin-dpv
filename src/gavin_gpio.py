@@ -14,14 +14,14 @@ from PIL import ImageFont
 import socket
 
 id = 'Gavin GPIO Daemon'
-version = '1.0.7'
+version = '1.0.8'
 
 # setup config map
 data_hub_socket = '/tmp/gavin_data_hub.socket'
 
 # GPIO Pin Definitons:
 core_button = 4
-nose_button = 17
+nose_button = 23
 
 # GPIO Setup:
 GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme

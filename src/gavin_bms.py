@@ -12,7 +12,7 @@ from threading import Thread
 from time import sleep
 
 id = 'Gavin BMS Daemon'
-version = '1.1.0'
+version = '1.1.1'
 DEBUG = 0
 
 try:
@@ -26,11 +26,11 @@ if DEV_MODE != 1:
     # Configure ADS11x5 parameters
     adc = Adafruit_ADS1x15.ADS1115(address=0x48, busnum=1)
     adc_GAIN = 2/3
-    adc_SPS = 64
+    adc_SPS = 128
     adc_OFFSET = .1875
     adc_VOFFSET = [5.545, 5]
-    adc_ACS770_OFFSET = 13.334
-    adc_ACS770_ERROR = 37
+    adc_ACS770_OFFSET = 40
+    adc_ACS770_ERROR = -100
 
 voltage_value = []
 sensor_data_map = {}
@@ -132,6 +132,7 @@ def read_sensors():
         adc_current_reference_voltage = float("{0:.4f}".format((sensor_data_map['adc_current_reference'] * adc_OFFSET * .001)))
         adc_offset_percent = adc_current_reference_voltage / 5.0
         adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET / 1000 * adc_offset_percent
+        # adc_ACS770_OFFSET_adjusted = 1
         sensor_data_map['current_actual_raw'] = float("{0:.4f}".format(((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2) - adc_ACS770_ERROR) * adc_OFFSET) * .001 / adc_ACS770_OFFSET_adjusted))
         if -.005 <= sensor_data_map['current_actual_raw'] <= .005:
             sensor_data_map['current_actual'] = 0
@@ -207,6 +208,7 @@ def coulomb_counter():
     avg_counter = 0
     avg_current = 0
     avg_ref = 0
+    avg_loop = 10
     sensor_data_map['current_total'] = 0
     sensor_data_map['current_max'] = 0
     sensor_data_map['adc_current_min'] = 13833
@@ -215,9 +217,9 @@ def coulomb_counter():
     while True:
         avg_current += adc.read_adc(3, gain=adc_GAIN, data_rate=adc_SPS)
         avg_ref += adc.read_adc(0, gain=adc_GAIN, data_rate=adc_SPS)
-        if avg_counter == 10 and startup == 0:
-            sensor_data_map['adc_current_value'] = int(round(avg_current / 10))
-            sensor_data_map['adc_current_reference'] = int(round(avg_ref / 10))
+        if avg_counter == avg_loop and startup == 0:
+            sensor_data_map['adc_current_value'] = int(round(avg_current / avg_loop))
+            sensor_data_map['adc_current_reference'] = int(round(avg_ref / avg_loop))
             read_sensors()
             if DEBUG == 1:
                 print('adc value: %d  supply value: %d' % (sensor_data_map['adc_current_value'], sensor_data_map['adc_current_reference']))
@@ -229,13 +231,13 @@ def coulomb_counter():
             avg_counter = 0
             avg_current = 0
             avg_ref = 0
-        elif avg_counter == 10 and startup == 1:
+        elif avg_counter == avg_loop and startup == 1:
             avg_counter = 0
             avg_current = 0
             avg_ref = 0
             startup = 0
         avg_counter += 1
-        sleep(1/10)
+        sleep(1/avg_loop)
     
 # Get values from config file
 read_config()

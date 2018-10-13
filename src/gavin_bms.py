@@ -128,11 +128,14 @@ def read_battery_config():
         print("Battery config file not found, loading defaults.")
 
 def read_sensors():
+    adc_ACS770_scaling = 0
     if DEV_MODE != 1:
-        adc_current_reference_voltage = float("{0:.4f}".format((sensor_data_map['adc_current_reference'] * adc_OFFSET * .001)))
-        adc_offset_percent = adc_current_reference_voltage / 5.0
-        adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET / 1000 * adc_offset_percent
-        # adc_ACS770_OFFSET_adjusted = 1
+        if adc_ACS770_scaling == 1:
+            adc_current_reference_voltage = float("{0:.4f}".format((sensor_data_map['adc_current_reference'] * adc_OFFSET * .001)))
+            adc_offset_percent = adc_current_reference_voltage / 5.0
+            adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET / 1000 * adc_offset_percent
+        else:
+            adc_ACS770_OFFSET_adjusted = 1
         sensor_data_map['current_actual_raw'] = float("{0:.4f}".format(((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2) - adc_ACS770_ERROR) * adc_OFFSET) * .001 / adc_ACS770_OFFSET_adjusted))
         if -.005 <= sensor_data_map['current_actual_raw'] <= .005:
             sensor_data_map['current_actual'] = 0

@@ -2,6 +2,8 @@
 
 # Daemon to read values from the voltage and current sensors
 # Data is requested through a json string, and returned as a json string
+# 13465 -> 13469 with ps, no load
+# 13667 running on ps, bypassing acs
 
 import os.path
 from os import unlink
@@ -30,7 +32,8 @@ if DEV_MODE != 1:
     adc_OFFSET = .1875
     adc_VOFFSET = [5.545, 5]
     adc_ACS770_OFFSET = 40
-    adc_ACS770_ERROR = -100
+    # adc_ACS770_ERROR = -100  # scaling off
+    adc_ACS770_ERROR = -97  # scaling on
 
 voltage_value = []
 sensor_data_map = {}
@@ -144,7 +147,9 @@ def read_sensors():
             
         if sensor_data_map['current_actual_raw'] > .005:
             sensor_data_map['state'] = 'discharging'
-        elif sensor_data_map['current_actual_raw'] < -.005:
+        elif -.0101 <= sensor_data_map['current_actual_raw'] < -.005:
+            sensor_data_map['state'] = 'maintaining'
+        elif sensor_data_map['current_actual_raw'] < -.0101:
             sensor_data_map['state'] = 'charging'
         else:
             sensor_data_map['state'] = 'resting'

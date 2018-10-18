@@ -30,8 +30,6 @@ if DEV_MODE != 1:
     adc_OFFSET = .1875
     adc_VOFFSET = [5.545, 5]
     adc_ACS770_OFFSET = 40
-    # adc_ACS770_ERROR = -100  # scaling off
-    # adc_ACS770_ERROR = -97  # scaling on
 
 voltage_value = []
 sensor_data_map = {}
@@ -143,7 +141,7 @@ def read_sensors():
             adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET / 1000 * adc_offset_percent
         else:
             adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET
-        sensor_data_map['current_actual_raw'] = float("{0:.4f}".format(((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2) - config_map['acs7xx_error']) * adc_OFFSET) * .001 / adc_ACS770_OFFSET_adjusted))
+        sensor_data_map['current_actual_raw'] = float("{0:.4f}".format(((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2) - config_map['acs7xx_error']) * adc_OFFSET) / adc_ACS770_OFFSET_adjusted))
         if -.005 <= sensor_data_map['current_actual_raw'] <= .005:
             sensor_data_map['current_actual'] = 0
         else:

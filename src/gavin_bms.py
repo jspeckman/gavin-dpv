@@ -2,8 +2,6 @@
 
 # Daemon to read values from the voltage and current sensors
 # Data is requested through a json string, and returned as a json string
-# 13465 -> 13469 with ps, no load
-# 13667 running on ps, bypassing acs
 
 import os.path
 from os import unlink
@@ -14,7 +12,7 @@ from threading import Thread
 from time import sleep
 
 id = 'Gavin BMS Daemon'
-version = '1.1.1'
+version = '1.1.2'
 DEBUG = 0
 
 try:
@@ -33,7 +31,7 @@ if DEV_MODE != 1:
     adc_VOFFSET = [5.545, 5]
     adc_ACS770_OFFSET = 40
     # adc_ACS770_ERROR = -100  # scaling off
-    adc_ACS770_ERROR = -97  # scaling on
+    # adc_ACS770_ERROR = -97  # scaling on
 
 voltage_value = []
 sensor_data_map = {}
@@ -53,6 +51,8 @@ battery_map['epoch_counter'] = 0
 
 # Default config values
 config_map['motor_watts'] = 500 # Gavin motor per Tahoe Benchmark
+config_map['acs7xx_scaling'] = 0
+config_map['acs7xx_error'] = -100
 
 # Default battery values
 # battery config file created or added to when batteries are configured (new batteries)
@@ -90,6 +90,11 @@ def read_config():
                 if 'motor' in config:
                     if 'watts' in config['motor']:
                         config_map['motor_watts'] = int(config['motor']['watts'])
+                if 'ACS7xx' in config:
+                    if 'scaling' in config['ACS7xx']:
+                        config_map['acs7xx_scaling'] = int(config['ACS7xx']['scaling'])
+                    if 'error' in config['ACS7xx']:
+                        config_map['acs7xx_error'] = int(config['ACS7xx']['error'])
             except ValueError:
                 print("Corrupt config file, loading defaults.")
     else:
@@ -131,34 +136,34 @@ def read_battery_config():
         print("Battery config file not found, loading defaults.")
 
 def read_sensors():
-    adc_ACS770_scaling = 0
     if DEV_MODE != 1:
-        if adc_ACS770_scaling == 1:
+        if config_map['acs7xx_scaling'] == 1:
             adc_current_reference_voltage = float("{0:.4f}".format((sensor_data_map['adc_current_reference'] * adc_OFFSET * .001)))
             adc_offset_percent = adc_current_reference_voltage / 5.0
             adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET / 1000 * adc_offset_percent
         else:
-            adc_ACS770_OFFSET_adjusted = 1
-        sensor_data_map['current_actual_raw'] = float("{0:.4f}".format(((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2) - adc_ACS770_ERROR) * adc_OFFSET) * .001 / adc_ACS770_OFFSET_adjusted))
+            adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET
+        sensor_data_map['current_actual_raw'] = float("{0:.4f}".format(((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2) - config_map['acs7xx_error']) * adc_OFFSET) * .001 / adc_ACS770_OFFSET_adjusted))
         if -.005 <= sensor_data_map['current_actual_raw'] <= .005:
             sensor_data_map['current_actual'] = 0
         else:
             sensor_data_map['current_actual'] = sensor_data_map['current_actual_raw']
-            
-        if sensor_data_map['current_actual_raw'] > .005:
-            sensor_data_map['state'] = 'discharging'
-        elif -.0101 <= sensor_data_map['current_actual_raw'] < -.005:
-            sensor_data_map['state'] = 'maintaining'
-        elif sensor_data_map['current_actual_raw'] < -.0101:
-            sensor_data_map['state'] = 'charging'
-        else:
-            sensor_data_map['state'] = 'resting'
             
         for battery_module in range(0, battery_map['modules']):
             voltage_value[battery_module] = float("{0:.2f}".format(((adc.read_adc(battery_module + 1, gain=adc_GAIN, data_rate=adc_SPS) * adc_OFFSET) * adc_VOFFSET[battery_module]) * .001))
         for battery_module in range(0, battery_map['modules']):
             if battery_module < battery_map['modules'] - 1:
                 voltage_value[battery_module] = float("{0:.2f}".format(voltage_value[battery_module] - voltage_value[battery_module + 1]))
+                
+        if sensor_data_map['current_actual_raw'] > .005:
+            sensor_data_map['state'] = 'discharging'
+        elif -.350 <= sensor_data_map['current_actual_raw'] < -.005 and all(13.5 <= v <= 14.3 for v in voltage_value):
+            sensor_data_map['state'] = 'maintaining'
+        elif sensor_data_map['current_actual_raw'] < -.350:
+            sensor_data_map['state'] = 'charging'
+        else:
+            sensor_data_map['state'] = 'resting'
+
     else:
         voltage_value[0] = 12.33
         voltage_value[1] = 12.29
@@ -231,7 +236,9 @@ def coulomb_counter():
             read_sensors()
             if DEBUG == 1:
                 print('adc value: %d  supply value: %d' % (sensor_data_map['adc_current_value'], sensor_data_map['adc_current_reference']))
-            sensor_data_map['current_total'] += (sensor_data_map['current_actual'] / 3600)
+            
+            if sensor_data_map['state'] == 'charging' or sensor_data_map['state'] == 'discharging':
+                sensor_data_map['current_total'] += (sensor_data_map['current_actual'] / 3600)
             sensor_data_map['watts_total'] = sensor_data_map['current_total'] * sensor_data_map['vbatt_actual']
             if DEBUG == 1:
                 print('Current: %f, current total: %f' % (sensor_data_map['current_actual_raw'],  sensor_data_map['current_total']))
@@ -282,7 +289,7 @@ while True:
         if request['request'] == 'data':
             if DEBUG == 1:
                 print('adc current min: %d  adc current max: %d' % (sensor_data_map['adc_current_min'], sensor_data_map['adc_current_max']))
-            battery_data = '{"voltage": %s, "current": "%s %s %s", "current total": %s, "current max": %s, "watts": %s, "ert": %s, "percent": %s, "state": "%s",' % (str(sensor_data_map['vbatt_actual']),  str(sensor_data_map['current_actual']), str(sensor_data_map['adc_current_value']), str(sensor_data_map['adc_current_reference']), str(sensor_data_map['current_total']),  str(sensor_data_map['current_max']),  str(sensor_data_map['watts_actual']), str(sensor_data_map['ert']), str(sensor_data_map['battery_percent']),  sensor_data_map['state'])
+            battery_data = '{"voltage": %s, "current": %s, "current total": %s, "current max": %s, "watts": %s, "ert": %s, "percent": %s, "state": "%s",' % (str(sensor_data_map['vbatt_actual']),  str(sensor_data_map['current_actual']), str(sensor_data_map['current_total']),  str(sensor_data_map['current_max']),  str(sensor_data_map['watts_actual']), str(sensor_data_map['ert']), str(sensor_data_map['battery_percent']),  sensor_data_map['state'])
             for i in range(0, battery_map['modules']):
                 battery_data = '%s "v%s": %s, ' % (battery_data,  str(i + 1),  str(voltage_value[i]))
             battery_data = '%s "uuid": "%s"}' % (battery_data, battery_map['uuid'])

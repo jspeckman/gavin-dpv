@@ -15,7 +15,7 @@ import uuid
 _ = lambda s: s
 
 id = 'Gavin CLI'
-version = '1.0.1'
+version = '1.0.2'
 
 # setup maps
 config_map = {}
@@ -33,6 +33,8 @@ config_map['uuid'] = str(uuid.uuid4())
 config_map['myname'] = "DPV"
 config_map['imu_calibration'] = ""
 config_map['motor_watts'] = 500
+config_map['acs7xx_scaling'] = 0
+config_map['acs7xx_error'] = 0
 config_map['units'] = "Imperial"
 config_map['bno_update_hz'] = 10
 config_map['sample_rate'] = 1
@@ -82,6 +84,11 @@ def read_config():
                 if 'motor' in config:
                     if 'watts' in config['motor']:
                         config_map['motor_watts'] = int(config['motor']['watts'])
+                if 'ACS7xx' in config:
+                    if 'scaling' in config['ACS7xx']:
+                        config_map['acs7xx_scaling'] = int(config['ACS7xx']['scaling'])
+                    if 'error' in config['ACS7xx']:
+                        config_map['acs7xx_error'] = int(config['ACS7xx']['error'])
                 if 'bno_update_hz' in config:
                     config_map['bno_update_hz'] = int(config['bno_update_hz'])
                 if 'sample_rate' in config:
@@ -132,7 +139,7 @@ def write_config():
     with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'w') as configfile:
         config_json = json.dumps({'first_run': config_map['first_run'], 'uuid': config_map['uuid'], 'myname': config_map['myname'],
                                   'calibration': {'imu': config_map['imu_calibration']}, 'axis_map': {'x': IMU_AXIS_MAP['x'], 'x_sign': IMU_AXIS_MAP['x_sign'], 'y': IMU_AXIS_MAP['y'], 'y_sign': IMU_AXIS_MAP['y_sign'], 'z': IMU_AXIS_MAP['z'], 'z_sign': IMU_AXIS_MAP['z_sign']},
-                                  'motor': {'watts': config_map['motor_watts']}, 'units': config_map['units'], 'clocksync': config_map['clocksync'], 'bno_update_hz': config_map['bno_update_hz'],
+                                  'motor': {'watts': config_map['motor_watts']}, 'ACS7xx': {'scaling': config_map['acs7xx_scaling'], 'error': config_map['acs7xx_error']}, 'units': config_map['units'], 'clocksync': config_map['clocksync'], 'bno_update_hz': config_map['bno_update_hz'],
                                   'sample_rate': config_map['sample_rate'], 'activate': {'method': config_map['activate_method'], 'trigger': config_map['activate_trigger']}}, indent = 4, sort_keys = True, separators=(',', ': '))
         configfile.write(config_json)
 
@@ -378,8 +385,9 @@ def config_axis_map():
 
 def config_electrical():
     menu = [
-        [ _("Motor Setup"),  set_motor ], 
-        [ _("Battery Setup"),  config_battery ], 
+        [ _("Motor Setup"), set_motor ], 
+        [ _("Battery Setup"), config_battery ],
+        [ _("Advanced"), config_electrical_advanced ],
     ]
 
     menu_map = {}
@@ -435,7 +443,37 @@ def config_battery():
         elif _input.lower().startswith("q"):
             return False
         continue
+
+def config_electrical_advanced():
+    menu = [
+        [_("Enable ACS7xx Scaling Feature"), set_acs7xx_scaling ],
+        [_("Set ACS7xx Error Offset"), set_acs7xx_error ],
+    ]
     
+    menu_map = {}
+    menu_max = 0
+    for item in menu:
+        menu_max = menu_max + 1
+        menu_map[menu_max] = item
+        
+    while True:
+        print()
+        print(_("Advanced Electrical Setup"))
+        print()
+        
+        for index in menu_map:
+            print("%d) %s" % (index,  menu_map[index][0]))
+        
+        print()
+        _input = input(_("Enter an option from 1-%d (enter q to quit): ") % (menu_max))
+        if _input.isdigit() and int(_input) in range(1,  menu_max + 1):
+            ch = int(_input)
+            if ch in menu_map:
+                menu_map[ch][1](ch)
+        elif _input.lower().startswith("q"):
+            return False
+        continue
+        
 def config_wifi():
     print("placeholder")
 
@@ -932,7 +970,58 @@ def set_battery_max_voltage():
             print(_("Maximum battery voltage must be a number"))
             print()
             continue
-            
+
+def set_acs7xx_scaling():
+    menu = [
+        [ _("Enable") ], 
+        [ _("Disable") ], 
+    ]
+
+    menu_map = {}
+    menu_max = 0
+    
+    for item in menu:
+        menu_max = menu_max + 1
+        menu_map[menu_max] = item
+        
+    while True:
+        print()
+        print(_("ACS7xx Scaling (currently"), config_map['acs7xx_scaling'], ")")
+        print()
+        
+        for index in menu_map:
+            print("%d) %s" % (index,  menu_map[index][0]))
+        
+        print()
+        _input = input(_("Enter an option from 1-%d (enter q to quit): ") % (menu_max))
+        if _input.isdigit() and int(_input) in range(1,  menu_max + 1):
+            ch = int(_input)
+            if ch in menu_map:
+                config_map['acs7xx_scaling'] = ch
+                write_config()
+                return True
+        elif _input.lower().startswith("q"):
+            return False
+        continue
+
+def set_acs7xx_error():
+    while True:
+        print()
+        print(_("ACS7xx Error Offset (currently"),  config_map['acs7xx_error'],  ")")
+        print()
+        error = input(_("Enter error offset correction value or c to cancel: "))
+        if error == "c":
+            return False
+        if error.isdigit() or float(error):
+            config_map['acs7xx_error'] = error
+            write_config()
+            return True
+        else:
+            print()
+            print(_("Maximum battery voltage must be a number"))
+            print()
+            continue
+
 def main_menu():
     menu = [
         [ _("Set Date/Time"),  config_date_time ], 

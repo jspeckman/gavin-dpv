@@ -15,7 +15,7 @@ import uuid
 _ = lambda s: s
 
 id = 'Gavin CLI'
-version = '1.0.2'
+version = '1.0.3'
 
 # setup maps
 config_map = {}
@@ -33,6 +33,7 @@ config_map['uuid'] = str(uuid.uuid4())
 config_map['myname'] = "DPV"
 config_map['imu_calibration'] = ""
 config_map['motor_watts'] = 500
+config_map['adc_offset'] = .1875
 config_map['acs7xx_scaling'] = 0
 config_map['acs7xx_error'] = 0
 config_map['units'] = "Imperial"
@@ -84,6 +85,9 @@ def read_config():
                 if 'motor' in config:
                     if 'watts' in config['motor']:
                         config_map['motor_watts'] = int(config['motor']['watts'])
+                if 'adc' in config:
+                    if 'offset' in config['adc']:
+                        config_map['adc_offset'] = float(config['adc']['offset'])
                 if 'ACS7xx' in config:
                     if 'scaling' in config['ACS7xx']:
                         config_map['acs7xx_scaling'] = int(config['ACS7xx']['scaling'])
@@ -139,7 +143,7 @@ def write_config():
     with open('%s/%s' % (config_map['config_dir'], config_map['config_file']), 'w') as configfile:
         config_json = json.dumps({'first_run': config_map['first_run'], 'uuid': config_map['uuid'], 'myname': config_map['myname'],
                                   'calibration': {'imu': config_map['imu_calibration']}, 'axis_map': {'x': IMU_AXIS_MAP['x'], 'x_sign': IMU_AXIS_MAP['x_sign'], 'y': IMU_AXIS_MAP['y'], 'y_sign': IMU_AXIS_MAP['y_sign'], 'z': IMU_AXIS_MAP['z'], 'z_sign': IMU_AXIS_MAP['z_sign']},
-                                  'motor': {'watts': config_map['motor_watts']}, 'ACS7xx': {'scaling': config_map['acs7xx_scaling'], 'error': config_map['acs7xx_error']}, 'units': config_map['units'], 'clocksync': config_map['clocksync'], 'bno_update_hz': config_map['bno_update_hz'],
+                                  'motor': {'watts': config_map['motor_watts']}, 'adc': {'offset': config_map['adc_offset']}, 'ACS7xx': {'scaling': config_map['acs7xx_scaling'], 'error': config_map['acs7xx_error']}, 'units': config_map['units'], 'clocksync': config_map['clocksync'], 'bno_update_hz': config_map['bno_update_hz'],
                                   'sample_rate': config_map['sample_rate'], 'activate': {'method': config_map['activate_method'], 'trigger': config_map['activate_trigger']}}, indent = 4, sort_keys = True, separators=(',', ': '))
         configfile.write(config_json)
 
@@ -446,6 +450,7 @@ def config_battery():
 
 def config_electrical_advanced():
     menu = [
+        [_("Change ADC Offset"), set_adc_offset ],
         [_("Enable ACS7xx Scaling Feature"), set_acs7xx_scaling ],
         [_("Set ACS7xx Error Offset"), set_acs7xx_error ],
     ]
@@ -971,6 +976,24 @@ def set_battery_max_voltage():
             print()
             continue
 
+def set_adc_offset():
+    while True:
+        print()
+        print(_("ADC Offset (currently"),  config_map['adc_offset'],  ")")
+        print()
+        offset = input(_("Enter ADC offset amount or c to cancel: "))
+        if offset == "c":
+            return False
+        if offset.isdigit() or float(offset):
+            config_map['adc_offset'] = offset
+            write_config()
+            return True
+        else:
+            print()
+            print(_("ADC offset must be a number"))
+            print()
+            continue
+
 def set_acs7xx_scaling():
     menu = [
         [ _("Enable") ], 
@@ -1018,7 +1041,7 @@ def set_acs7xx_error():
             return True
         else:
             print()
-            print(_("Maximum battery voltage must be a number"))
+            print(_("ADC7xx error offset must be a number"))
             print()
             continue
 

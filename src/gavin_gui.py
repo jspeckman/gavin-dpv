@@ -124,7 +124,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                         self.wfile.write(bytes('<center><p style="font-size:50px;color:red"><strong>Unable to get logging status</strong></p></center>', "utf-8"))
                     if config_map['clocksync'] != 'Internet':
                         self.wfile.write(bytes('<center><p style="padding-top: 20px;"><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:60px;height:200px;width:500px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
-                        self.wfile.write(bytes('<center>DPV Time:<span id="clock"></span>',  "utf-8"))
+                        self.wfile.write(bytes('<center>DPV Time: <span id="clock"></span>',  "utf-8"))
                     
                 elif mobile == 0:
                     self.wfile.write(bytes('<center><p style="font-size:75px;padding-top: 20px;"><strong>Battery</strong></p></center>', "utf-8"))
@@ -149,7 +149,7 @@ class gavin_gui(BaseHTTPRequestHandler):
                     self.wfile.write(bytes('<center><p><form action="/" method="post"><input type="hidden" name="download_page" value="true"><button style="font-size:25px;height:70px;width:200px" type="submit">Download Logs</button></form></p></center>', "utf-8"))
                     if config_map['clocksync'] != 'Internet':
                         self.wfile.write(bytes('<center><p><form id="synctime" name="synctime" action="/" method="post"><input type="hidden" name="browser_time" value=""><button style="font-size:25px;height:70px;width:200px" onclick="syncTime();">Sync Time</button></form></p></center>', "utf-8"))
-                        self.wfile.write(bytes('<center>DPV Time:<span id="clock"></span>',  "utf-8"))
+                        self.wfile.write(bytes('<center>DPV Time: <span id="clock"></span>',  "utf-8"))
     
                 self.wfile.write(bytes("</body></html>", "utf-8"))
                 

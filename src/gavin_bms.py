@@ -12,7 +12,7 @@ from threading import Thread
 from time import sleep
 
 id = 'Gavin BMS Daemon'
-version = '1.1.2'
+version = '1.1.3'
 DEBUG = 0
 
 try:
@@ -27,7 +27,6 @@ if DEV_MODE != 1:
     adc = Adafruit_ADS1x15.ADS1115(address=0x48, busnum=1)
     adc_GAIN = 2/3
     adc_SPS = 128
-    adc_OFFSET = .1875
     adc_VOFFSET = [5.545, 5]
     adc_ACS770_OFFSET = 40
 
@@ -49,8 +48,9 @@ battery_map['epoch_counter'] = 0
 
 # Default config values
 config_map['motor_watts'] = 500 # Gavin motor per Tahoe Benchmark
+config_map['adc_offset'] = .1875
 config_map['acs7xx_scaling'] = 0
-config_map['acs7xx_error'] = -100
+config_map['acs7xx_error'] = -120
 
 # Default battery values
 # battery config file created or added to when batteries are configured (new batteries)
@@ -88,6 +88,9 @@ def read_config():
                 if 'motor' in config:
                     if 'watts' in config['motor']:
                         config_map['motor_watts'] = int(config['motor']['watts'])
+                if 'adc' in config:
+                    if 'offset' in config['adc']:
+                        config_map['adc_offset'] = float(config['adc']['offset'])
                 if 'ACS7xx' in config:
                     if 'scaling' in config['ACS7xx']:
                         config_map['acs7xx_scaling'] = int(config['ACS7xx']['scaling'])
@@ -136,24 +139,26 @@ def read_battery_config():
 def read_sensors():
     if DEV_MODE != 1:
         if config_map['acs7xx_scaling'] == 1:
-            adc_current_reference_voltage = float("{0:.4f}".format((sensor_data_map['adc_current_reference'] * adc_OFFSET * .001)))
+            adc_current_reference_voltage = float("{0:.4f}".format((sensor_data_map['adc_current_reference'] * config_map['adc_offset'] * .001)))
             adc_offset_percent = adc_current_reference_voltage / 5.0
             adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET / 1000 * adc_offset_percent
         else:
             adc_ACS770_OFFSET_adjusted = adc_ACS770_OFFSET
-        sensor_data_map['current_actual_raw'] = float("{0:.4f}".format(((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2) - config_map['acs7xx_error']) * adc_OFFSET) / adc_ACS770_OFFSET_adjusted))
-        if -.005 <= sensor_data_map['current_actual_raw'] <= .005:
+        sensor_data_map['current_actual_raw'] = float("{0:.4f}".format(((sensor_data_map['adc_current_value'] - (sensor_data_map['adc_current_reference'] / 2) - config_map['acs7xx_error']) * config_map['adc_offset']) / adc_ACS770_OFFSET_adjusted))
+        if -.005 <= sensor_data_map['current_actual_raw'] <= .05:
             sensor_data_map['current_actual'] = 0
         else:
             sensor_data_map['current_actual'] = sensor_data_map['current_actual_raw']
             
         for battery_module in range(0, battery_map['modules']):
-            voltage_value[battery_module] = float("{0:.2f}".format(((adc.read_adc(battery_module + 1, gain=adc_GAIN, data_rate=adc_SPS) * adc_OFFSET) * adc_VOFFSET[battery_module]) * .001))
+            voltage_value[battery_module] = float("{0:.2f}".format(((adc.read_adc(battery_module + 1, gain=adc_GAIN, data_rate=adc_SPS) * config_map['adc_offset']) * adc_VOFFSET[battery_module]) * .001))
         for battery_module in range(0, battery_map['modules']):
             if battery_module < battery_map['modules'] - 1:
                 voltage_value[battery_module] = float("{0:.2f}".format(voltage_value[battery_module] - voltage_value[battery_module + 1]))
-                
-        if sensor_data_map['current_actual_raw'] > .005:
+
+        if sensor_data_map['current_actual_raw'] > .5:
+            sensor_data_map['state'] = 'on trigger'
+        elif .05 <= sensor_data_map['current_actual_raw'] >= .5:
             sensor_data_map['state'] = 'discharging'
         elif -.350 <= sensor_data_map['current_actual_raw'] < -.005 and all(13.5 <= v <= 14.3 for v in voltage_value):
             sensor_data_map['state'] = 'maintaining'
@@ -165,7 +170,7 @@ def read_sensors():
     else:
         voltage_value[0] = 12.33
         voltage_value[1] = 12.29
-        sensor_data_map['adc_current_value'] = 13989   #Debugging
+        sensor_data_map['adc_current_value'] = 13989
         sensor_data_map['adc_current_reference'] = 27189
         sensor_data_map['current_actual'] = 16
         sensor_data_map['state'] = 'discharging'
@@ -184,6 +189,7 @@ def runtime_calculator():
     # ERT in minutes
     
     # SoC based on open circuit voltage.  min_voltage also valid for load
+    # Need to add coulomb cou ter value for better percentage estimate
     if battery_map['chemistry'] == 'SLA':
         if sensor_data_map['vbatt_actual'] <= (battery_map['min_voltage'] * battery_map['modules']):
             sensor_data_map['battery_percent'] = 0

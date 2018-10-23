@@ -14,7 +14,7 @@ from PIL import ImageFont
 import socket
 
 id = 'Gavin GPIO Daemon'
-version = '1.0.8'
+version = '1.0.9'
 
 # setup config map
 data_hub_socket = '/tmp/gavin_data_hub.socket'
@@ -101,7 +101,7 @@ def display_hotspot_screen():
         draw.text((x, top + 57), "to attach to WiFi",  font=body_font, fill=255)
     else:
         draw.text((x, top + 48), "Hold button for 4s", font=body_font, fill=255)
-        draw.text((x, top + 57), "to activate Hostspot",  font=body_font, fill=255)
+        draw.text((x, top + 57), "to activate Hotspot",  font=body_font, fill=255)
         
     # Display image.
     display.image(image)

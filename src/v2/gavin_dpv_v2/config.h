@@ -4,10 +4,20 @@
   
 */
 
+//Debugging
+//#define DEBUG_ALL
+#define DEBUG_STARTUP
+#define DEBUG_MAIN_LOGGING
+//#define DEBUG_ENVIRONMENT
+//#define DEBUG_READ_BATTERY
+//#define DEBUG_READ_MOTOR
+#define DEBUG_IMU
+
 //General
 #define DPV_UUID "gue-1845"
-#define UNITS imperial            //Comment out for metric
-#define LOG_INTERVAL 1            //Seconds
+#define UNITS imperial                //Comment out for metric
+#define LOG_INTERVAL 1                //Seconds
+#define SEALEVELPRESSURE_HPA 101325   //1013.25 x 100
 
 //ADC Tuning
 #define ADC_OFFSET 3              //3mV for ADS1015, .1875mV for ADS1115
@@ -36,3 +46,8 @@
 #define BATTERY_MAX_VOLTAGE 13100 //mVoltage to declare 100% or full (13.1) x 1000
 
 //IMU
+
+//Global Variables
+bool logging_enabled = true;      //Track state of logging
+unsigned long coulomb_counter;    //Track coulombs in/out
+unsigned long last_debounce_time; //Button debouncing

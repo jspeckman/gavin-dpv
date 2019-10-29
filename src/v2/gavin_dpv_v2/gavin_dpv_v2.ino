@@ -7,34 +7,18 @@
 #include <Adafruit_ADS1015.h>
 #include <Adafruit_BNO055.h>
 
-#include "SSD1306Ascii.h"
-#include "SSD1306AsciiWire.h"
 #include "LowPower.h"
 
-//Defines
-//#define DEBUG_ALL
-#define DEBUG_STARTUP
-#define DEBUG_MAIN_LOGGING
-//#define DEBUG_ENVIRONMENT
-//#define DEBUG_READ_BATTERY
-//#define DEBUG_READ_MOTOR
-#define DEBUG_IMU
+#include "ui.h"
+#include "environment.h"
+#include "power.h"
 
-#define SEALEVELPRESSURE_HPA 1013.25
-#define BME_ADDRESS 0x76
+//Defines
 #define OLED_ADDRESS 0x3C
 #define OLED_RST_PIN -1
 
-//Global Variables
-bool logging_enabled = true;
-unsigned long coulomb_counter;
-unsigned long last_debounce_time;
-
 //Define Sensors
-Adafruit_BME280 internal_env;
-Adafruit_ADS1015 adc(0x48);
 Adafruit_BNO055 bno = Adafruit_BNO055(55);
-SSD1306AsciiWire oled;
 
 void setup() {
   int display;
@@ -142,69 +126,6 @@ void loop() {
   }
 }
 
-void read_env(unsigned long& internal_temperature, unsigned long& internal_pressure, unsigned long& internal_humidity, unsigned long& external_temperature, unsigned long& external_pressure) {
-  internal_env.setSampling(Adafruit_BME280::MODE_NORMAL);
-  internal_temperature = internal_env.readTemperature() * 100;  //convert to integer, units in c
-  internal_pressure = internal_env.readPressure() * 100 ;       //convert to integer, units in mBar
-  internal_humidity = internal_env.readHumidity() * 1000;       //convert to integer, percentage
-  external_temperature = 0;
-  external_pressure = 0;
-  internal_env.setSampling(Adafruit_BME280::MODE_SLEEP);
-  
-  #ifdef UNITS == imperial
-    internal_temperature = (internal_temperature * 18) + 32000;
-  #endif
-
-  #if defined (DEBUG_ENVIRONMENT) || defined (DEBUG_ALL)
-    Serial.println("read_env()");
-    Serial.print("Internal Temperature = "); Serial.println(internal_temperature);
-    Serial.print("Internal Pressure: "); Serial.println(internal_pressure);
-    Serial.print("Internal Humidity: "); Serial.println(internal_humidity);
-    Serial.print("External Temperature: "); Serial.println(external_temperature);
-    Serial.print("External Pressure: "); Serial.println(external_pressure);
-    Serial.println();
-  #endif
-}
-
-void read_battery(unsigned long& battery1, unsigned long& battery2, uint8_t& percent_charge) {
-  battery1 = adc.readADC_SingleEnded(1) * (unsigned long)ADC_ERROR;
-  battery2 = adc.readADC_SingleEnded(2) * (unsigned long)ADC_ERROR;
-
-  #if defined (DEBUG_READ_BATTERY) || defined (DEBUG_ALL)
-    Serial.println("read_battery()");
-    Serial.print("ADC Input1: "); Serial.print(battery1); Serial.print(" Battery1 Voltage: "); Serial.println(((battery1 * ADC_OFFSET) * ADC_V_DIVIDER_1) / 100000);
-    Serial.print("ADC Input2: "); Serial.print(battery2); Serial.print(" Battery2 Voltage: "); Serial.println(((battery2 * ADC_OFFSET) * ADC_V_DIVIDER_2) / 100000);
-    Serial.println();
-  #endif
-
-  battery1 = ((battery1 * ADC_OFFSET) * ADC_V_DIVIDER_1) / 100000;
-  battery2 = ((battery2 * ADC_OFFSET) * ADC_V_DIVIDER_2) / 100000;
-
-  if (battery1 <= BATTERY_MIN_VOLTAGE * BATTERY_MODULES) {
-    percent_charge = 0;
-  }
-  else if (battery1 >= BATTERY_MAX_VOLTAGE * BATTERY_MODULES) {
-    percent_charge = 100;
-  }
-  else {
-    percent_charge = (battery1 - (BATTERY_MIN_VOLTAGE * BATTERY_MODULES)) * 100 / ((BATTERY_MAX_VOLTAGE * BATTERY_MODULES) - (BATTERY_MIN_VOLTAGE * BATTERY_MODULES));
-  }
-  battery1 = battery1 - battery2;
-}
-
-void read_motor(unsigned long& mAmps) {
-  mAmps = adc.readADC_SingleEnded(3) * (unsigned long)ADC_ERROR;
-
-  #if defined (DEBUG_READ_MOTOR) || defined (DEBUG_ALL)
-    Serial.println("read_motor()");
-    Serial.print("ADC Input3: "); Serial.print(mAmps); Serial.print(" milliAmps: "); Serial.println(((mAmps * ADC_OFFSET) - ACS_OFFSET) / ACS_MVPERAMP * 10);
-    Serial.println();
-  #endif
-
-  mAmps = ((mAmps * ADC_OFFSET) - ACS_OFFSET) / ACS_MVPERAMP * 10;
-  coulomb_counter = coulomb_counter - (mAmps / 3600);
-}
-
 void read_position(int16_t& quat_w, int16_t& quat_x, int16_t& quat_y, int16_t& quat_z, int16_t& accel_x, int16_t& accel_y, int16_t& accel_z, uint8_t& heading) {
   uint8_t system, gyro, acceleration , mag = 0;
   imu::Quaternion quat;
@@ -260,30 +181,4 @@ void read_position(int16_t& quat_w, int16_t& quat_x, int16_t& quat_y, int16_t& q
     oled.println("IMU Not Calibrated");
     oled.println("Not logging position");
   }
-}
-
-void button_pressed(){
-  int button_state = digitalRead(2);
-  int button_timer = 0;
-  unsigned long current_time = millis();
-
-  if (logging_enabled == true) {
-    if (button_state == LOW && (current_time - last_debounce_time > 200)) {
-      logging_enabled = false;
-      Serial.println("Button Pressed: Stop logging");
-    }
-  }
-  else {
-    while(digitalRead(2) == LOW) {
-      delay(1);
-      button_timer++;
-    }
-    if (button_timer > 2000){
-      Serial.println("Button Pressed: Long");
-    }
-    else if (button_timer > 200) {
-      Serial.println("Button Pressed: Short");
-    }
-  }
-  last_debounce_time = current_time;
 }

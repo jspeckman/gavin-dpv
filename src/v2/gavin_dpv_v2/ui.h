@@ -2,11 +2,6 @@
  * Functions related to the user interface
  */
 
-#include "SSD1306Ascii.h"
-#include "SSD1306AsciiWire.h"
-
-SSD1306AsciiWire oled;
-
 void button_pressed(){
   int button_state = digitalRead(2);
   int button_timer = 0;

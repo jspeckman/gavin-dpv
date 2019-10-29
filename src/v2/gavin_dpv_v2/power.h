@@ -2,8 +2,6 @@
  * Functions related to power system
  */
 
-Adafruit_ADS1015 adc(0x48);
-
 void read_battery(unsigned long& battery1, unsigned long& battery2, uint8_t& percent_charge) {
   battery1 = adc.readADC_SingleEnded(1) * (unsigned long)ADC_ERROR;
   battery2 = adc.readADC_SingleEnded(2) * (unsigned long)ADC_ERROR;

@@ -1,24 +1,12 @@
 //Includes
 #include "config.h"
 #include <TimeLib.h>
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h>
-#include <Adafruit_ADS1015.h>
-#include <Adafruit_BNO055.h>
 
 #include "LowPower.h"
 
 #include "ui.h"
 #include "environment.h"
 #include "power.h"
-
-//Defines
-#define OLED_ADDRESS 0x3C
-#define OLED_RST_PIN -1
-
-//Define Sensors
-Adafruit_BNO055 bno = Adafruit_BNO055(55);
 
 void setup() {
   int display;

@@ -2,10 +2,6 @@
  * Functions related to environment data
  */
 
-#define BME_ADDRESS 0x76
-
-Adafruit_BME280 internal_env;
-
 void read_env(unsigned long& internal_temperature, unsigned long& internal_pressure, unsigned long& internal_humidity, unsigned long& external_temperature, unsigned long& external_pressure) {
   internal_env.setSampling(Adafruit_BME280::MODE_NORMAL);
   internal_temperature = internal_env.readTemperature() * 100;  //convert to integer, units in c

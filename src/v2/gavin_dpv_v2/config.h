@@ -51,3 +51,22 @@
 bool logging_enabled = true;      //Track state of logging
 unsigned long coulomb_counter;    //Track coulombs in/out
 unsigned long last_debounce_time; //Button debouncing
+
+//Device Settings and definitions
+#include <Wire.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+#include <Adafruit_ADS1015.h>
+#include <Adafruit_BNO055.h>
+
+#define OLED_ADDRESS 0x3C
+#define OLED_RST_PIN -1
+#define BME_ADDRESS 0x76
+
+#include "SSD1306Ascii.h"
+#include "SSD1306AsciiWire.h"
+
+SSD1306AsciiWire oled;
+Adafruit_BME280 internal_env;
+Adafruit_ADS1015 adc(0x48);
+Adafruit_BNO055 bno = Adafruit_BNO055(55);
